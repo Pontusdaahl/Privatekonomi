@@ -124,16 +124,16 @@ const FIRE_DEFAULTS={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
   bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg'};
 let FIRE=(()=>{try{const s=localStorage.getItem('pk-fire');if(s)return Object.assign({},FIRE_DEFAULTS,JSON.parse(s));}catch(e){}return Object.assign({},FIRE_DEFAULTS);})();
 function saveFire(){
-  const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
-  try{localStorage.setItem('pk-fire',JSON.stringify(d));}catch(e){}
-  fetch(FIREBASE_URL+'/pk-fire.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(()=>{});
+  // Store FIRE settings inside DATA so they sync via existing Firebase connection
+  DATA.fireSettings={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
+  saveData();
 }
-async function loadFire(){
-  try{
-    const r=await fetch(FIREBASE_URL+'/pk-fire.json');
-    if(r.ok){const d=await r.json();if(d&&d.monthlySpend){FIRE.monthlySpend=d.monthlySpend;FIRE.expectedReturn=d.expectedReturn;FIRE.monthlySaving=d.monthlySaving;return;}}
-  }catch(e){}
-  try{const s=localStorage.getItem('pk-fire');if(s){const d=JSON.parse(s);if(d&&d.monthlySpend){FIRE.monthlySpend=d.monthlySpend;FIRE.expectedReturn=d.expectedReturn;FIRE.monthlySaving=d.monthlySaving;}}}catch(e){}
+function loadFireFromData(){
+  if(DATA.fireSettings && DATA.fireSettings.monthlySpend){
+    FIRE.monthlySpend=DATA.fireSettings.monthlySpend;
+    FIRE.expectedReturn=DATA.fireSettings.expectedReturn;
+    FIRE.monthlySaving=DATA.fireSettings.monthlySaving;
+  }
 }
 
 const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
@@ -747,7 +747,8 @@ function bindEvents(){
 }
 
 (async function init(){
-  [DATA] = await Promise.all([loadData(), loadFire()]);
+  DATA=await loadData();
+  loadFireFromData();
   FORM.date=todayStr();
   const hash=location.hash.replace('#','');
   if(['oversikt','transaktioner','formogenhet','mal'].includes(hash)) TAB=hash;
