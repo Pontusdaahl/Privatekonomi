@@ -126,7 +126,8 @@ let FIRE=(()=>{try{const s=localStorage.getItem('pk-fire');if(s)return Object.as
 function saveFire(){
   const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
   try{localStorage.setItem('pk-fire',JSON.stringify(d));}catch(e){}
-  fetch(FIREBASE_URL+'/fire-settings.json',{
+  // Save under /privatekonomi/fireSettings — same root as all other data
+  fetch(FIREBASE_URL+'/privatekonomi/fireSettings.json',{
     method:'PUT',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(d)
@@ -134,7 +135,7 @@ function saveFire(){
 }
 async function loadFire(){
   try{
-    const r=await fetch(FIREBASE_URL+'/fire-settings.json');
+    const r=await fetch(FIREBASE_URL+'/privatekonomi/fireSettings.json');
     if(r.ok){
       const d=await r.json();
       if(d && typeof d.monthlySpend==='number'){
@@ -145,7 +146,6 @@ async function loadFire(){
       }
     }
   }catch(e){}
-  // fallback: localStorage
   try{
     const s=localStorage.getItem('pk-fire');
     if(s){
