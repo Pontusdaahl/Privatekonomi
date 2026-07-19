@@ -205,7 +205,6 @@ const FIRE_DEFAULTS={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
 let FIRE=Object.assign({},FIRE_DEFAULTS);
 async function saveFire(){
   const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
-  // Save to root-level path — completely separate from /privatekonomi so saveData() never overwrites it
   try{
     await fetch(FIREBASE_URL+'/pk-fire.json',{
       method:'PUT',
@@ -213,6 +212,28 @@ async function saveFire(){
       body:JSON.stringify(d)
     });
   }catch(e){console.warn('saveFire failed',e);}
+}
+async function doSaveFire(){
+  const btn=document.getElementById('btn-save-fire');
+  const status=document.getElementById('fire-save-status');
+  if(btn)btn.textContent='Sparar...';
+  if(status){status.textContent='';status.style.color='';}
+  const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
+  try{
+    const r=await fetch(FIREBASE_URL+'/pk-fire.json',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(d)
+    });
+    if(r.ok){
+      if(status){status.textContent='✓ Sparat till Firebase!';status.style.color='#00e5a0';}
+    } else {
+      if(status){status.textContent='✗ Firebase svarade: '+r.status;status.style.color='#ff5e7a';}
+    }
+  }catch(e){
+    if(status){status.textContent='✗ Fel: '+e.message;status.style.color='#ff5e7a';}
+  }
+  if(btn)btn.textContent='💾 SPARA INSTÄLLNINGAR';
 }
 async function loadFire(){
   try{
@@ -623,6 +644,8 @@ function renderMal(D){
             <div style="display:flex;justify-content:space-between;font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;"><span>Förväntad avkastning</span><span id="out-ret" style="color:#eef4f1;font-weight:600;">${FIRE.expectedReturn}%</span></div>
             <input type="range" class="fire-sl" id="fire-ret" min="1" max="15" step="0.5" value="${FIRE.expectedReturn}">
           </div>
+          <button id="btn-save-fire" onclick="doSaveFire()" style="width:100%;margin-top:22px;padding:14px;background:linear-gradient(180deg,#00e5a0,#04b384);border:none;border-radius:12px;color:#04130d;font-weight:700;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;">💾 SPARA INSTÄLLNINGAR</button>
+          <div id="fire-save-status" style="margin-top:10px;font-size:13px;text-align:center;height:18px;"></div>
         </div>
         <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;">
           <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:18px;">TILLVÄXTPROGNOS (20 ÅR)</div>
