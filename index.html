@@ -23,6 +23,20 @@ select option{background:#0b0f13;color:#e6edf3}
 input[type="date"]{color-scheme:dark;}
 input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;opacity:0;position:absolute;right:0;width:36px;height:100%;}
 @keyframes nwpulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
+@keyframes pinShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+#pin-screen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(rgba(7,9,11,.88),rgba(7,9,11,.88)),url('https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg') center/cover no-repeat;}
+@media(max-width:700px){#pin-screen{background:linear-gradient(rgba(7,9,11,.88),rgba(7,9,11,.88)),url('https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg') center/cover no-repeat;}}
+#pin-box{background:rgba(11,14,17,.7);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:40px 36px;text-align:center;width:min(340px,90vw);}
+#pin-dots{display:flex;justify-content:center;gap:16px;margin:28px 0;}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.2);transition:all .2s;}
+.pin-dot.filled{background:#00e5a0;border-color:#00e5a0;box-shadow:0 0 12px rgba(0,229,160,.6);}
+#pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:240px;margin:0 auto;}
+.pin-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;
+  padding:18px;font-size:22px;font-weight:600;color:#e6edf3;cursor:pointer;font-family:'Courier New',monospace;
+  transition:all .15s;}
+.pin-btn:active{background:rgba(0,229,160,.2);border-color:#00e5a0;transform:scale(.94);}
+#pin-error{color:#ff5e7a;font-size:13px;height:18px;margin-top:12px;}
 
 /* FIRE sliders - in head so they always apply */
 input[type=range].fire-sl{
@@ -90,7 +104,34 @@ input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;back
 </head>
 <body>
 <div id="global-bg"></div>
-<div id="root">Laddar...</div>
+<div id="pin-screen">
+  <div id="pin-box">
+    <div style="font-size:11px;letter-spacing:.2em;color:#5d6b76;margin-bottom:6px;">PRIVATEKONOMI</div>
+    <div style="font-size:20px;font-weight:700;color:#eef4f1;">Ange PIN-kod</div>
+    <div id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div id="pin-grid">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinClear()" style="font-size:16px;color:#8b97a3;">⌫</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" style="opacity:0;pointer-events:none;"></button>
+    </div>
+    <div id="pin-error"></div>
+  </div>
+</div>
+<div id="root" style="display:none;">Laddar...</div>
 <div id="bottom-nav">
   <button id="bnav-oversikt" onclick="setTab('oversikt')">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -110,6 +151,45 @@ input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;back
   </button>
 </div>
 <script>
+const PIN_HASH = '3a7bd3e2360a3d29eea436fcfb7e44c735d117c681f5656f8ac';
+// Simple hash check - not cryptographic but sufficient for casual protection
+function simpleHash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h).toString(36);}
+const CORRECT = simpleHash('3294');
+let pinEntry='';
+function pinPress(d){
+  if(pinEntry.length>=4)return;
+  pinEntry+=d;
+  updatePinDots();
+  if(pinEntry.length===4){
+    if(simpleHash(pinEntry)===CORRECT){
+      try{sessionStorage.setItem('pk-unlocked','1');}catch(e){}
+      document.getElementById('pin-screen').style.display='none';
+      document.getElementById('root').style.display='';
+    } else {
+      document.getElementById('pin-error').textContent='Fel PIN-kod';
+      document.getElementById('pin-box').style.animation='pinShake .4s ease';
+      setTimeout(()=>{
+        pinEntry='';
+        updatePinDots();
+        document.getElementById('pin-error').textContent='';
+        document.getElementById('pin-box').style.animation='';
+      },600);
+    }
+  }
+}
+function pinClear(){if(pinEntry.length>0){pinEntry=pinEntry.slice(0,-1);updatePinDots();}}
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d)d.classList.toggle('filled',i<pinEntry.length);
+  }
+}
+// Skip PIN if already unlocked this session
+if(sessionStorage.getItem('pk-unlocked')==='1'){
+  document.getElementById('pin-screen').style.display='none';
+  document.getElementById('root').style.display='';
+}
+
 function emptyData(){
   return {transactions:[],assets:[],debts:[],budgets:{},
     fire:{currentAge:'27',expectedReturn:'7',inflation:'2',swr:'4',monthlySaving:null,currentCapital:null,targetAnnualSpend:null}};
