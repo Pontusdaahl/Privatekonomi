@@ -5,239 +5,231 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privatekonomi Terminal</title>
 <style>
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:#07090b;font-family:'Courier New',monospace;}
-  body{color:#e6edf3;}
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-thumb{background:#1b242d;border-radius:6px}
-  ::-webkit-scrollbar-track{background:transparent}
-  input,select,button,textarea{font-family:inherit}
-  input::placeholder,textarea::placeholder{color:#465058}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:#2dd4ff !important;box-shadow:0 0 0 3px rgba(45,212,255,.13)}
-  select option{background:#0b0f13;color:#e6edf3}
-  input[type="date"]{color-scheme:dark;}
-  input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;opacity:0;position:absolute;right:0;width:36px;height:100%;}
-  @keyframes nwpulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
-  /* Bottom nav for mobile webapp */
-  #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(11,14,17,.97);backdrop-filter:blur(12px);border-top:1px solid #1a2128;padding:8px 0 env(safe-area-inset-bottom,8px);}
-  #bottom-nav button{flex:1;background:none;border:none;color:#5d6b76;cursor:pointer;padding:6px 4px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.08em;display:flex;flex-direction:column;align-items:center;gap:3px;}
-  #bottom-nav button.active{color:#00e5a0;}
-  #bottom-nav button svg{width:20px;height:20px;}
-  @media(max-width:700px){
-    #bottom-nav{display:flex;}
-    #root>div>div{padding-bottom:72px !important;}
-    #mal-page{padding:16px !important;padding-bottom:80px !important;margin-top:0 !important;}
-    .mal-hero-num{font-size:24px !important;line-height:1.1 !important;}
-    .mal-pct-big{font-size:26px !important;}
-    .mal-wd-num{font-size:20px !important;}
-    #mal-target{font-size:24px !important;}
-    #mal-pct{font-size:26px !important;}
-  }
-  .sl-wrap{margin-bottom:20px;}
-  .sl-header{display:flex;justify-content:space-between;font-size:15px;color:#8b97a3;margin-bottom:10px;}
-  .sl-val{color:#dbe6ec;font-weight:600;font-size:15px;}
-  input[type=range].fire-sl{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;background:#1a2128;outline:none;cursor:grab;border:none;padding:8px 0;}
-  input[type=range].fire-sl:active{cursor:grabbing;}
-  input[type=range].fire-sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:#00e5a0;cursor:grab;border:3px solid #07090b;box-shadow:0 0 14px rgba(0,229,160,.7);margin-top:-10px;}
-  input[type=range].fire-sl::-webkit-slider-runnable-track{height:8px;border-radius:8px;background:#1a2128;}
-  input[type=range].fire-sl::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#00e5a0;cursor:grab;border:3px solid #07090b;box-shadow:0 0 14px rgba(0,229,160,.7);}
-  input[type=range].fire-sl::-moz-range-track{height:8px;border-radius:8px;background:#1a2128;}
-  input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;background:#00e5a0;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:#07090b;font-family:'Courier New',monospace;}
+body{color:#e6edf3;}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#1b242d;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+input,select,button,textarea{font-family:inherit}
+input::placeholder,textarea::placeholder{color:#465058}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#2dd4ff !important;box-shadow:0 0 0 3px rgba(45,212,255,.13)}
+select option{background:#0b0f13;color:#e6edf3}
+input[type="date"]{color-scheme:dark;}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;opacity:0;position:absolute;right:0;width:36px;height:100%;}
+@keyframes nwpulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
+
+/* FIRE sliders - in head so they always apply */
+input[type=range].fire-sl{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:8px;border-radius:8px;
+  background:#1a2128;outline:none;
+  cursor:grab;border:none;display:block;
+}
+input[type=range].fire-sl:active{cursor:grabbing;}
+input[type=range].fire-sl::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:28px;height:28px;border-radius:50%;
+  background:#00e5a0;cursor:grab;
+  border:3px solid #07090b;
+  box-shadow:0 0 14px rgba(0,229,160,.7);
+  margin-top:-10px;
+}
+input[type=range].fire-sl::-webkit-slider-runnable-track{
+  height:8px;border-radius:8px;background:#1a2128;
+}
+input[type=range].fire-sl::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;
+  background:#00e5a0;cursor:grab;
+  border:3px solid #07090b;
+  box-shadow:0 0 14px rgba(0,229,160,.7);
+}
+input[type=range].fire-sl::-moz-range-track{height:8px;border-radius:8px;background:#1a2128;}
+input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;background:#00e5a0;}
+
+/* Desktop big numbers on MAL page */
+@media(min-width:701px){
+  #mal-fire-num{font-size:72px !important;}
+  #mal-nw-num{font-size:72px !important;}
+  #mal-pct{font-size:64px !important;}
+  #mal-w3m,#mal-w4m{font-size:52px !important;}
+}
+
+/* Bottom nav */
+#bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(11,14,17,.97);backdrop-filter:blur(12px);
+  border-top:1px solid #1a2128;
+  padding:6px 0 env(safe-area-inset-bottom,6px);}
+#bottom-nav button{flex:1;background:none;border:none;color:#5d6b76;cursor:pointer;
+  padding:6px 2px;font-family:'Courier New',monospace;font-size:8px;
+  letter-spacing:.06em;display:flex;flex-direction:column;align-items:center;gap:3px;}
+#bottom-nav button.bnav-active{color:#00e5a0;}
+#bottom-nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
+
+@media(max-width:700px){
+  #bottom-nav{display:flex;}
+  body{padding-bottom:0;}
+  #main-wrap{padding-bottom:72px !important;}
+  /* MAL mobile overrides - !important beats inline styles */
+  #mal-fire-num{font-size:22px !important;}
+  #mal-nw-num{font-size:22px !important;}
+  #mal-pct{font-size:24px !important;}
+  #mal-bar-wrap{height:14px !important;}
+  #mal-w3m,#mal-w4m{font-size:20px !important;}
+  #mal-page{padding:14px !important;padding-bottom:80px !important;}
+}
 </style>
 </head>
 <body>
 <div id="root">Laddar...</div>
 <div id="bottom-nav">
-  <button data-tab="oversikt" onclick="TAB='oversikt';render();">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+  <button id="bnav-oversikt" onclick="setTab('oversikt')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
     ÖVERSIKT
   </button>
-  <button data-tab="transaktioner" onclick="const t=new Date();FORM.date=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');TAB='transaktioner';render();">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <button id="bnav-transaktioner" onclick="setTab('transaktioner')">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     TRANSAKTION
   </button>
-  <button data-tab="formogenhet" onclick="TAB='formogenhet';render();">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg>
+  <button id="bnav-formogenhet" onclick="setTab('formogenhet')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
     FÖRMÖGENHET
   </button>
-  <button data-tab="mal" onclick="TAB='mal';render();if(typeof bindFireEvents==='function')setTimeout(bindFireEvents,100);">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+  <button id="bnav-mal" onclick="setTab('mal')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
     MÅL & FIRE
   </button>
 </div>
 <script>
-function updateBottomNav(){
-  document.querySelectorAll('#bottom-nav button[data-tab]').forEach(b=>{
-    b.classList.toggle('active', b.dataset.tab===TAB);
-  });
-}
-const _origRenderNav = render;
-render = function(){ _origRenderNav(); updateBottomNav(); };
-</script>
-<script>
-
 function emptyData(){
-  return {
-    transactions: [],
-    assets: [],
-    debts: [],
-    budgets: {},
-    fire: { currentAge:'27', expectedReturn:'7', inflation:'2', swr:'4', monthlySaving:null, currentCapital:null, targetAnnualSpend:null },
-  };
+  return {transactions:[],assets:[],debts:[],budgets:{},
+    fire:{currentAge:'27',expectedReturn:'7',inflation:'2',swr:'4',monthlySaving:null,currentCapital:null,targetAnnualSpend:null}};
 }
-let DATA = null;
-let TAB = 'oversikt';
-let MONTH = (function(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); })();
-let TXFILTER = 'all';
-let FORM = { type:'expense', amount:'', category:'Bostad', date:MONTH+'-01', note:'' };
-let ASSETFORM = { name:'', value:'', category:'Aktier/fonder' };
-let DEBTFORM = { name:'', value:'' };
-let IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null;
-let FIRE = { age:27, monthlySpend:29000, expectedReturn:7, monthlySaving:15000, bgUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg', bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg' };
-let FIRE_CHART = null;
+let DATA=null, TAB='oversikt', TXFILTER='all', IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
+let MONTH=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
+let FORM={type:'expense',amount:'',category:'Bostad',date:MONTH+'-01',note:''};
+let ASSETFORM={name:'',value:'',category:'Aktier/fonder'};
+let DEBTFORM={name:'',value:''};
+let FIRE={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
+  bgUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg',
+  bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg'};
 
-const DEFAULT_CATS = { expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'], income:['Lön','Övrigt'], investment:['Övrigt','Aktier','Fonder','Amortering'] };
-
-const FIREBASE_URL = 'https://privatekonomi-6ca77-default-rtdb.europe-west1.firebasedatabase.app';
-const DB_PATH = '/privatekonomi.json';
-let SAVE_TIMER = null;
+const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
+const ASSET_CATS=['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
+const FIREBASE_URL='https://privatekonomi-6ca77-default-rtdb.europe-west1.firebasedatabase.app';
+const DB_PATH='/privatekonomi.json';
 
 async function loadData(){
-  try{
-    const res = await fetch(FIREBASE_URL + DB_PATH);
-    if (res.ok){
-      const d = await res.json();
-      if (d) return d;
-    }
-  }catch(e){}
-  // fallback to localStorage if offline
-  try{
-    const raw = localStorage.getItem('privatekonomi-data-v1');
-    if (raw) return JSON.parse(raw);
-  }catch(e){}
+  try{const r=await fetch(FIREBASE_URL+DB_PATH);if(r.ok){const d=await r.json();if(d)return d;}}catch(e){}
+  try{const raw=localStorage.getItem('pk-v1');if(raw)return JSON.parse(raw);}catch(e){}
   return emptyData();
 }
-
 async function saveData(){
-  // save to localStorage immediately as backup
-  try{ localStorage.setItem('privatekonomi-data-v1', JSON.stringify(DATA)); }catch(e){}
-  // debounce Firebase writes (max 1 per second)
+  try{localStorage.setItem('pk-v1',JSON.stringify(DATA));}catch(e){}
   clearTimeout(SAVE_TIMER);
-  SAVE_TIMER = setTimeout(async ()=>{
-    try{
-      await fetch(FIREBASE_URL + DB_PATH, {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(DATA)
-      });
-    }catch(e){ console.warn('Firebase sync failed, data saved locally', e); }
-  }, 800);
+  SAVE_TIMER=setTimeout(async()=>{
+    try{await fetch(FIREBASE_URL+DB_PATH,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DATA)});}catch(e){}
+  },800);
 }
 
-const fmt = v => new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v||0)) + ' kr';
-const toNum = (x,d=0) => { const n=Number(String(x==null?'':x).replace(/\s/g,'').replace(',','.')); return isFinite(n)?n:d; };
-function monthLabel(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m-1,1).toLocaleDateString('sv-SE',{month:'long',year:'numeric'}); }
-function calcAge(){ const b=new Date('1998-08-04'),n=new Date(); let a=n.getFullYear()-b.getFullYear(); if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--; return a; }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const fmt=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v||0))+' kr';
+const toNum=(x,d=0)=>{const n=Number(String(x==null?'':x).replace(/\s/g,'').replace(',','.'));return isFinite(n)?n:d;};
+function monthLabel(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('sv-SE',{month:'long',year:'numeric'});}
+function calcAge(){const b=new Date('1998-08-04'),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+
+function setTab(tab, pushState=true){
+  TAB=tab;
+  if(tab==='transaktioner') FORM.date=todayStr();
+  if(pushState) history.pushState({tab}, '', '#'+tab);
+  render();
+}
+window.addEventListener('popstate', e=>{
+  const tab = (e.state&&e.state.tab) || 'oversikt';
+  setTab(tab, false);
+});
+function updateBottomNav(){
+  document.querySelectorAll('#bottom-nav button').forEach(b=>{
+    b.classList.toggle('bnav-active', b.id==='bnav-'+TAB);
+  });
+}
 
 function derive(month){
-  const monthTx = DATA.transactions.filter(t=>t.date && t.date.slice(0,7)===month);
-  const S = (arr,p) => arr.filter(p).reduce((a,t)=>a+(Number(t.amount)||0),0);
-  const income = S(monthTx,t=>t.type==='income');
-  const expense = S(monthTx,t=>t.type==='expense');
-  const invested = S(monthTx,t=>t.type==='investment');
-  const saved = income-expense;
-  const savingsRate = income>0 ? (saved/income*100) : 0;
-  const totAssets = DATA.assets.reduce((a,x)=>a+toNum(x.value,0),0);
-  const totDebts = DATA.debts.reduce((a,x)=>a+toNum(x.value,0),0);
-  const netWorth = totAssets-totDebts;
-  const expByCat = {};
-  monthTx.filter(t=>t.type==='expense').forEach(t=>{ expByCat[t.category]=(expByCat[t.category]||0)+(Number(t.amount)||0); });
+  const monthTx=DATA.transactions.filter(t=>t.date&&t.date.slice(0,7)===month);
+  const S=(arr,p)=>arr.filter(p).reduce((a,t)=>a+(Number(t.amount)||0),0);
+  const income=S(monthTx,t=>t.type==='income'),expense=S(monthTx,t=>t.type==='expense'),invested=S(monthTx,t=>t.type==='investment');
+  const saved=income-expense,savingsRate=income>0?(saved/income*100):0;
+  const totAssets=DATA.assets.reduce((a,x)=>a+toNum(x.value,0),0);
+  const totDebts=DATA.debts.reduce((a,x)=>a+toNum(x.value,0),0);
+  const netWorth=totAssets-totDebts;
+  const expByCat={};monthTx.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.category]=(expByCat[t.category]||0)+(Number(t.amount)||0);});
   const year=(month||'').slice(0,4);
-  const yearTx = DATA.transactions.filter(t=>t.date && t.date.slice(0,4)===year);
-  const yExpByCat = {};
-  yearTx.filter(t=>t.type==='expense').forEach(t=>{ yExpByCat[t.category]=(yExpByCat[t.category]||0)+(Number(t.amount)||0); });
-  const allExpByCat = {};
-  DATA.transactions.filter(t=>t.type==='expense').forEach(t=>{ allExpByCat[t.category]=(allExpByCat[t.category]||0)+(Number(t.amount)||0); });
-  const yIncome=S(yearTx,t=>t.type==='income'), yExpense=S(yearTx,t=>t.type==='expense'), yInvested=S(yearTx,t=>t.type==='investment');
-  const ySaved=yIncome-yExpense; const yRate = yIncome>0?(ySaved/yIncome*100):0;
-  const allIncome=S(DATA.transactions,t=>t.type==='income'), allExpense=S(DATA.transactions,t=>t.type==='expense'), allInvested=S(DATA.transactions,t=>t.type==='investment');
-  const allSaved=allIncome-allExpense; const allRate=allIncome>0?(allSaved/allIncome*100):0;
-  const allDates = DATA.transactions.map(t=>t.date).filter(Boolean).sort();
-  const firstDate = allDates.length ? allDates[0] : null;
-  return { income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,expByCat,
-    year,yIncome,yExpense,yInvested,ySaved,yRate,yearTxCount:yearTx.length,yExpByCat,
-    allIncome,allExpense,allInvested,allSaved,allRate,allTxCount:DATA.transactions.length, monthTxCount:monthTx.length, allExpByCat, firstDate };
+  const yearTx=DATA.transactions.filter(t=>t.date&&t.date.slice(0,4)===year);
+  const yExpByCat={};yearTx.filter(t=>t.type==='expense').forEach(t=>{yExpByCat[t.category]=(yExpByCat[t.category]||0)+(Number(t.amount)||0);});
+  const allExpByCat={};DATA.transactions.filter(t=>t.type==='expense').forEach(t=>{allExpByCat[t.category]=(allExpByCat[t.category]||0)+(Number(t.amount)||0);});
+  const yIncome=S(yearTx,t=>t.type==='income'),yExpense=S(yearTx,t=>t.type==='expense'),yInvested=S(yearTx,t=>t.type==='investment');
+  const ySaved=yIncome-yExpense,yRate=yIncome>0?(ySaved/yIncome*100):0;
+  const allIncome=S(DATA.transactions,t=>t.type==='income'),allExpense=S(DATA.transactions,t=>t.type==='expense'),allInvested=S(DATA.transactions,t=>t.type==='investment');
+  const allSaved=allIncome-allExpense,allRate=allIncome>0?(allSaved/allIncome*100):0;
+  const allDates=DATA.transactions.map(t=>t.date).filter(Boolean).sort();
+  const firstDate=allDates.length?allDates[0]:null;
+  return{income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,expByCat,
+    year,yIncome,yExpense,yInvested,ySaved,yRate,yExpByCat,
+    allIncome,allExpense,allInvested,allSaved,allRate,allExpByCat,firstDate,monthTxCount:monthTx.length};
 }
 
 function render(){
-  const root = document.getElementById('root');
-  const D = derive(MONTH);
-  root.innerHTML = `
-  <div style="min-height:100vh;color:#e6edf3;background:radial-gradient(1100px 560px at 80% -10%, rgba(45,212,255,.08), transparent 60%), radial-gradient(900px 480px at -8% 104%, rgba(0,229,160,.07), transparent 55%), #07090b;">
-    <div style="max-width:1400px;margin:0 auto;padding:28px;">
-      <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:14px;">
-          <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(0,229,160,.2), rgba(45,212,255,.12));border:1px solid rgba(0,229,160,.38);box-shadow:0 0 24px rgba(0,229,160,.28);font-size:23.6px;color:#00e5a0;">◆</div>
-          <div>
-            <div style="font-weight:700;letter-spacing:.14em;font-size:17.7px;color:#eef4f1;">PRIVATEKONOMI</div>
-            <div style="display:flex;align-items:center;gap:7px;font-size:11.8px;letter-spacing:.2em;color:#5d6b76;margin-top:2px;">
-              <span style="width:7px;height:7px;border-radius:50%;background:#00e5a0;box-shadow:0 0 9px #00e5a0;animation:nwpulse 2.2s infinite;display:inline-block;"></span>
-              TERMINAL · LIVE
-            </div>
+  const D=derive(MONTH);
+  document.getElementById('root').innerHTML=`
+  <div style="min-height:100vh;color:#e6edf3;background:radial-gradient(1100px 560px at 80% -10%,rgba(45,212,255,.08),transparent 60%),radial-gradient(900px 480px at -8% 104%,rgba(0,229,160,.07),transparent 55%),#07090b;">
+  <div id="main-wrap" style="max-width:1400px;margin:0 auto;padding:28px;">
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(0,229,160,.2),rgba(45,212,255,.12));border:1px solid rgba(0,229,160,.38);box-shadow:0 0 24px rgba(0,229,160,.28);font-size:20px;color:#00e5a0;">◆</div>
+        <div>
+          <div style="font-weight:700;letter-spacing:.14em;font-size:17.7px;color:#eef4f1;">PRIVATEKONOMI</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.2em;color:#5d6b76;margin-top:2px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#00e5a0;box-shadow:0 0 9px #00e5a0;animation:nwpulse 2.2s infinite;display:inline-block;"></span>TERMINAL · LIVE
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-          <div style="text-align:right;">
-            <div style="font-size:13px;letter-spacing:.18em;color:#5d6b76;">NETTOFÖRMÖGENHET</div>
-            <div style="margin-top:3px;font-weight:700;font-size:26px;color:${D.netWorth>=0?'#00e5a0':'#ff5e7a'}">${fmt(D.netWorth)}</div>
-          </div>
-          <button id="btn-openio" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.025);color:#aeb9c2;border:1px solid #222a32;border-radius:11px;padding:10px 15px;font-size:14.2px;cursor:pointer;">⇅ DATA</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+        <div style="text-align:right;">
+          <div style="font-size:11px;letter-spacing:.18em;color:#5d6b76;">NETTOFÖRMÖGENHET</div>
+          <div style="margin-top:3px;font-weight:700;font-size:26px;color:${D.netWorth>=0?'#00e5a0':'#ff5e7a'}">${fmt(D.netWorth)}</div>
         </div>
-      </header>
-      <nav style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
-        ${tabBtn('oversikt','ÖVERSIKT')}${tabBtn('transaktioner','TRANSAKTIONER')}${tabBtn('formogenhet','FÖRMÖGENHET')}${tabBtn('mal','MÅL & FIRE')}
-      </nav>
-      <div id="content"></div>
-    </div>
-  </div>
-  ${IO_OPEN ? renderModal() : ''}
-  `;
-  document.getElementById('content').innerHTML = TAB==='oversikt' ? renderOversikt(D) : TAB==='transaktioner' ? renderTx(D) : TAB==='mal' ? renderMal(D) : renderFormogenhet(D);
+        <button id="btn-openio" style="background:rgba(255,255,255,.025);color:#aeb9c2;border:1px solid #222a32;border-radius:11px;padding:10px 15px;font-size:14px;cursor:pointer;">⇅ DATA</button>
+      </div>
+    </header>
+    <nav style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+      ${['oversikt','transaktioner','formogenhet','mal'].map(k=>{
+        const labels={oversikt:'ÖVERSIKT',transaktioner:'TRANSAKTIONER',formogenhet:'FÖRMÖGENHET',mal:'MÅL & FIRE'};
+        const a=TAB===k;
+        return `<button onclick="setTab('${k}')" style="padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;letter-spacing:.05em;border:1px solid ${a?'rgba(0,229,160,.5)':'#1b2228'};background:${a?'linear-gradient(180deg,rgba(0,229,160,.15),rgba(0,229,160,.04))':'rgba(255,255,255,.012)'};color:${a?'#00e5a0':'#7c8893'};">${labels[k]}</button>`;
+      }).join('')}
+    </nav>
+    <div id="content"></div>
+  </div></div>
+  ${IO_OPEN?renderModal():''}`;
+  document.getElementById('content').innerHTML=
+    TAB==='oversikt'?renderOversikt(D):
+    TAB==='transaktioner'?renderTx(D):
+    TAB==='mal'?renderMal(D):
+    renderFormogenhet(D);
   bindEvents();
-  if(TAB==='mal') { if(typeof bindFireEvents==='function') bindFireEvents(); }
+  if(TAB==='mal') bindFireEvents();
+  updateBottomNav();
 }
 
-function tabBtn(key,label){
-  const active = TAB===key;
-  return `<button data-tab="${key}" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
-    border:1px solid ${active?'rgba(0,229,160,.5)':'#1b2228'};
-    background:${active?'linear-gradient(180deg, rgba(0,229,160,.15), rgba(0,229,160,.04))':'rgba(255,255,255,.012)'};
-    color:${active?'#00e5a0':'#7c8893'};">${label}</button>`;
-}
-function card(content,style=''){ return `<div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;${style}">${content}</div>`; }
-function row(label,val,col){
-  return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">${label}</span><span style="font-size:15.3px;color:${col};">${val}</span></div>`;
-}
-function catBreakdown(expByCat){
-  const total = Object.values(expByCat).reduce((a,v)=>a+v,0) || 1;
-  const entries = Object.entries(expByCat).sort((a,b)=>b[1]-a[1]);
-  if (!entries.length) return `<div style="padding:10px 0;text-align:center;font-size:13px;color:#465058;">Inga utgifter</div>`;
-  const rankCols=['#00e5a0','#2dd4ff','#ffb454','#ff5e7a','#a78bfa'];
-  return entries.map(([cat,amt],i)=>{
-    const col=rankCols[i%rankCols.length]; const pct=amt/total*100;
-    return `<div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">${esc(cat)}</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">${fmt(amt)}</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">${Math.round(pct)}%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:${Math.max(3,pct)}%;height:100%;background:${col};box-shadow:0 0 8px ${col};"></div>
-      </div>
-    </div>`;
+function card(content,style=''){return`<div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;${style}">${content}</div>`;}
+function row(l,v,col){return`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16px;color:#8b97a3;">${l}</span><span style="font-size:15px;color:${col};">${v}</span></div>`;}
+function catBreakdown(e){
+  const total=Object.values(e).reduce((a,v)=>a+v,0)||1,entries=Object.entries(e).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length)return`<div style="padding:10px 0;text-align:center;font-size:13px;color:#465058;">Inga utgifter</div>`;
+  const cols=['#00e5a0','#2dd4ff','#ffb454','#ff5e7a','#a78bfa'];
+  return entries.map(([cat,amt],i)=>{const col=cols[i%cols.length],pct=amt/total*100;
+    return`<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;"><span style="font-size:14px;color:#d4ddd9;">${esc(cat)}</span><span style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;color:#cdd8d4;">${fmt(amt)}</span><span style="font-size:14px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">${Math.round(pct)}%</span></span></div><div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;"><div style="width:${Math.max(3,pct)}%;height:100%;background:${col};box-shadow:0 0 8px ${col};"></div></div></div>`;
   }).join('');
 }
 
@@ -381,8 +373,6 @@ function renderTx(D){
   </div>`;
 }
 
-const ASSET_CATS = ['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
-
 function renderFormogenhet(D){
   const nwTotal=(D.totAssets+D.totDebts)||1;
   const catOptsFor = (cur) => ASSET_CATS.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
@@ -444,136 +434,160 @@ function renderFormogenhet(D){
   </div>`;
 }
 
+
 function renderMal(D){
-  const nw = D.netWorth;
-  const fireTarget = (FIRE.monthlySpend*12)/0.04;
-  const pct = Math.min(100, nw/fireTarget*100);
-  const ret = FIRE.expectedReturn/100;
-  const sav = FIRE.monthlySaving;
-  function yrsTo(t){ if(nw>=t) return 0; let w=nw,y=0; while(w<t&&y<100){w=w*(1+ret)+sav*12;y++;} return y<100?y:null; }
-  const yFire = yrsTo(fireTarget);
-  const withdraw3 = nw*0.03, withdraw4 = nw*0.04;
-  const bgD = FIRE.bgUrl;
-  const bgM = FIRE.bgMobUrl || bgD;
-
+  const nw=D.netWorth;
+  const target=(FIRE.monthlySpend*12)/0.04;
+  const pct=Math.min(100,nw/target*100);
+  const ret=FIRE.expectedReturn/100,sav=FIRE.monthlySaving;
+  function yrsTo(t){if(nw>=t)return 0;let w=nw,y=0;while(w<t&&y<100){w=w*(1+ret)+sav*12;y++;}return y<100?y:null;}
+  const yFire=yrsTo(target);
+  const w3=nw*0.03,w4=nw*0.04;
+  const pctCol=pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff';
   return `
-  <style>
-    #mal-page{position:relative;min-height:100vh;margin:-28px;padding:40px;box-sizing:border-box;}
-    #mal-bg{position:fixed;inset:0;z-index:0;background:linear-gradient(rgba(7,9,11,.55),rgba(7,9,11,.55)),url('${bgD}') center/cover no-repeat;}
-    @media(max-width:600px){#mal-bg{background:linear-gradient(rgba(7,9,11,.55),rgba(7,9,11,.55)),url('${bgM}') center/cover no-repeat;}}
-    #mal-content{position:relative;z-index:1;max-width:1400px;margin:0 auto;}
-    @media(max-width:600px){#mal-page{padding:16px;}}
-  </style>
-  <div id="mal-bg"></div>
-  <div id="mal-page">
-  <div id="mal-content">
+  <div id="mal-page" style="margin:-28px;padding:40px;position:relative;min-height:100vh;">
+    <div id="mal-bg" style="position:fixed;inset:0;z-index:0;background:linear-gradient(rgba(7,9,11,.55),rgba(7,9,11,.55)),url('${FIRE.bgUrl}') center/cover no-repeat;"></div>
+    <style>@media(max-width:700px){#mal-bg{background:linear-gradient(rgba(7,9,11,.55),rgba(7,9,11,.55)),url('${FIRE.bgMobUrl}') center/cover no-repeat !important;}}</style>
+    <div style="position:relative;z-index:1;max-width:1400px;margin:0 auto;">
 
-  <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid #1a2128;border-radius:20px;padding:40px;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-bottom:32px;">
-      <div>
-        <div style="font-size:13px;letter-spacing:.18em;color:#5d6b76;">FRIHETSMÅL</div>
-        <div style="class="mal-hero-num" style="font-size:52px;font-weight:700;color:#00e5a0;margin-top:6px;line-height:1;" id="mal-target">${fmt(fireTarget)}</div>
-        <div style="font-size:16px;color:#5d6b76;margin-top:6px;" id="mal-target-sub">${fmt(FIRE.monthlySpend)}/mån · 4%-regeln</div>
+      <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:36px;margin-bottom:20px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.45);margin-bottom:8px;">FRIHETSMÅL</div>
+            <div id="mal-fire-num" style="font-size:48px;font-weight:700;color:#00e5a0;line-height:1;">${fmt(target)}</div>
+            <div id="mal-fire-sub" style="font-size:15px;color:rgba(255,255,255,.4);margin-top:6px;">${fmt(FIRE.monthlySpend)}/mån · 4%-regeln</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.45);margin-bottom:8px;">NULÄGE</div>
+            <div id="mal-nw-num" style="font-size:48px;font-weight:700;color:#2dd4ff;line-height:1;">${fmt(nw)}</div>
+            <div style="font-size:15px;color:rgba(255,255,255,.4);margin-top:6px;">Ålder ${calcAge()} år</div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">
+            <span style="font-size:15px;color:rgba(255,255,255,.6);">Framsteg mot FIRE</span>
+            <span id="mal-pct" style="font-size:40px;font-weight:700;color:${pctCol};line-height:1;">${pct.toFixed(1)}%</span>
+          </div>
+          <div id="mal-bar-wrap" style="height:18px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden;">
+            <div id="mal-bar" style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2dd4ff,#00e5a0);border-radius:10px;transition:width .3s;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:rgba(255,255,255,.4);">
+            <span id="mal-achieved">${fmt(nw)} uppnått</span>
+            <span id="mal-remaining">${fmt(Math.max(0,target-nw))} kvar</span>
+          </div>
+        </div>
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07);font-size:13px;color:rgba(255,255,255,.4);">
+          <span id="mal-time">${yFire!==null?`Uppskattad tid till FIRE: ca ${yFire} år (${FIRE.expectedReturn}% avkastning, ${fmt(sav)}/mån)`:'Justera sparande för att nå målet'}</span>
+        </div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:13px;letter-spacing:.18em;color:#5d6b76;">NULÄGE</div>
-        <div style="class="mal-hero-num" style="font-size:52px;font-weight:700;color:#2dd4ff;margin-top:6px;line-height:1;">${fmt(nw)}</div>
-        <div style="font-size:16px;color:#5d6b76;margin-top:6px;">Ålder ${calcAge()} år</div>
-      </div>
-    </div>
-    <div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:16px;color:#aeb9c2;">Framsteg mot FIRE</span>
-        <span id="mal-pct" class="mal-pct-big" style="font-size:42px;font-weight:700;line-height:1;color:${pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff'};">${pct.toFixed(1)}%</span>
-      </div>
-      <div style="height:22px;border-radius:12px;background:rgba(255,255,255,.08);overflow:hidden;">
-        <div id="mal-bar" style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2dd4ff,#00e5a0);border-radius:12px;"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:14px;color:#5d6b76;">
-        <span id="mal-achieved">${fmt(nw)} uppnått</span>
-        <span id="mal-remaining">${fmt(Math.max(0,fireTarget-nw))} kvar</span>
-      </div>
-    </div>
-    <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.07);font-size:14px;color:#5d6b76;">
-      <span id="mal-time">${yFire!==null ? `Uppskattad tid till FIRE: ca ${yFire} år (${FIRE.expectedReturn}% avkastning, ${fmt(sav)}/mån sparande)` : 'Justera sparande för att nå målet'}</span>
-    </div>
-  </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-    <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid #1a2128;border-radius:20px;padding:28px;">
-      <div style="font-size:12px;letter-spacing:.16em;color:#5d6b76;margin-bottom:12px;">3%-REGELN (KONSERVATIV)</div>
-      <div style="class="mal-wd-num" style="font-size:38px;font-weight:700;color:#00e5a0;line-height:1;"><span id="mal-w3m">${fmt(withdraw3/12)}</span><span style="font-size:16px;font-weight:400;color:#5d6b76;">/mån</span></div>
-      <div style="font-size:15px;color:#5d6b76;margin-top:8px;" id="mal-w3y">${fmt(withdraw3)}/år</div>
-    </div>
-    <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid #1a2128;border-radius:20px;padding:28px;">
-      <div style="font-size:12px;letter-spacing:.16em;color:#5d6b76;margin-bottom:12px;">4%-REGELN (STANDARD)</div>
-      <div style="class="mal-wd-num" style="font-size:38px;font-weight:700;color:#2dd4ff;line-height:1;"><span id="mal-w4m">${fmt(withdraw4/12)}</span><span style="font-size:16px;font-weight:400;color:#5d6b76;">/mån</span></div>
-      <div style="font-size:15px;color:#5d6b76;margin-top:8px;" id="mal-w4y">${fmt(withdraw4)}/år</div>
-    </div>
-  </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;">
+          <div style="font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.4);margin-bottom:10px;">3%-REGELN</div>
+          <div id="mal-w3m" style="font-size:36px;font-weight:700;color:#00e5a0;line-height:1;">${fmt(w3/12)}<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.4);">/mån</span></div>
+          <div id="mal-w3y" style="font-size:14px;color:rgba(255,255,255,.4);margin-top:8px;">${fmt(w3)}/år</div>
+        </div>
+        <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;">
+          <div style="font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.4);margin-bottom:10px;">4%-REGELN</div>
+          <div id="mal-w4m" style="font-size:36px;font-weight:700;color:#2dd4ff;line-height:1;">${fmt(w4/12)}<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.4);">/mån</span></div>
+          <div id="mal-w4y" style="font-size:14px;color:rgba(255,255,255,.4);margin-top:8px;">${fmt(w4)}/år</div>
+        </div>
+      </div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;margin-bottom:20px;">
-    <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid #1a2128;border-radius:20px;padding:28px;">
-      <div style="font-size:13px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:22px;">INSTÄLLNINGAR</div>
-      <div class="sl-wrap">
-        <div class="sl-header"><span>Månadsutgift</span><span class="sl-val" id="out-spend">${fmt(FIRE.monthlySpend)}</span></div>
-        <input type="range" class="fire-sl" id="fire-spend" min="5000" max="150000" step="1000" value="${FIRE.monthlySpend}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;">
+        <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;">
+          <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:22px;">INSTÄLLNINGAR</div>
+          <div style="margin-bottom:22px;">
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;"><span>Månadsutgift</span><span id="out-spend" style="color:#eef4f1;font-weight:600;">${fmt(FIRE.monthlySpend)}</span></div>
+            <input type="range" class="fire-sl" id="fire-spend" min="5000" max="150000" step="1000" value="${FIRE.monthlySpend}">
+          </div>
+          <div style="margin-bottom:22px;">
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;"><span>Månadsparande</span><span id="out-sav" style="color:#eef4f1;font-weight:600;">${fmt(FIRE.monthlySaving)}</span></div>
+            <input type="range" class="fire-sl" id="fire-sav" min="0" max="60000" step="500" value="${FIRE.monthlySaving}">
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;"><span>Förväntad avkastning</span><span id="out-ret" style="color:#eef4f1;font-weight:600;">${FIRE.expectedReturn}%</span></div>
+            <input type="range" class="fire-sl" id="fire-ret" min="1" max="15" step="0.5" value="${FIRE.expectedReturn}">
+          </div>
+        </div>
+        <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;">
+          <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:18px;">TILLVÄXTPROGNOS (20 ÅR)</div>
+          <div style="position:relative;width:100%;height:260px;"><canvas id="fire-chart"></canvas></div>
+          <div style="display:flex;gap:20px;margin-top:14px;font-size:12px;">
+            <span style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.5);"><span style="width:12px;height:3px;background:#00e5a0;display:inline-block;border-radius:2px;"></span>Förmögenhet</span>
+            <span style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.5);"><span style="width:12px;height:3px;background:#2dd4ff;border-radius:2px;display:inline-block;"></span>FIRE-mål</span>
+          </div>
+        </div>
       </div>
-      <div class="sl-wrap">
-        <div class="sl-header"><span>Månadsparande</span><span class="sl-val" id="out-sav">${fmt(FIRE.monthlySaving)}</span></div>
-        <input type="range" class="fire-sl" id="fire-sav" min="0" max="60000" step="500" value="${FIRE.monthlySaving}">
-      </div>
-      <div class="sl-wrap">
-        <div class="sl-header"><span>Förväntad avkastning</span><span class="sl-val" id="out-ret">${FIRE.expectedReturn}%</span></div>
-        <input type="range" class="fire-sl" id="fire-ret" min="1" max="15" step="0.5" value="${FIRE.expectedReturn}">
-      </div>
-    </div>
-    <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid #1a2128;border-radius:20px;padding:28px;">
-      <div style="font-size:13px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:18px;">TILLVÄXTPROGNOS (20 ÅR)</div>
-      <div style="position:relative;width:100%;height:280px;"><canvas id="fire-chart"></canvas></div>
-      <div style="display:flex;gap:20px;margin-top:14px;font-size:13px;">
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:3px;background:#00e5a0;display:inline-block;border-radius:2px;"></span><span style="color:#8b97a3;">Förmögenhet</span></span>
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:3px;background:#2dd4ff;border-radius:2px;display:inline-block;"></span><span style="color:#8b97a3;">FIRE-mål</span></span>
-      </div>
-    </div>
-  </div>
 
-  </div></div>`;
+    </div>
+  </div>`;
 }
 
 function drawFireChart(D){
-  const c = document.getElementById('fire-chart');
-  if(!c) return;
-  const nw = D.netWorth;
-  const ret = FIRE.expectedReturn/100;
-  const sav = FIRE.monthlySaving;
-  const target = (FIRE.monthlySpend*12)/0.04;
-  const labels=[], v1=[], v2=[];
-  let w=nw;
+  const c=document.getElementById('fire-chart');if(!c)return;
+  const nw=D.netWorth,ret=FIRE.expectedReturn/100,sav=FIRE.monthlySaving;
+  const target=(FIRE.monthlySpend*12)/0.04;
+  const age=calcAge();
+  const labels=[],v1=[],v2=[];let w=nw;
   for(let y=0;y<=20;y++){
-    labels.push(y===0?'Nu':y+'å');
-    v1.push(Math.round(w));
-    v2.push(Math.round(target));
+    labels.push((age+y)+' år');
+    v1.push(Math.round(w));v2.push(Math.round(target));
     w=w*(1+ret)+sav*12;
   }
-  if(FIRE_CHART){ FIRE_CHART.destroy(); FIRE_CHART=null; }
-  FIRE_CHART = new Chart(c,{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Förmögenhet',data:v1,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,pointRadius:2,fill:true,tension:.3},
-      {label:'FIRE-mål',data:v2,borderColor:'#2dd4ff',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
-    ]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(ctx.raw)+' kr'}}},
-      scales:{
-        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5d6b76',font:{size:10},maxTicksLimit:6}},
-        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5d6b76',font:{size:10},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'k':v}}
-      }
-    }
-  });
+  if(FIRE_CHART){FIRE_CHART.destroy();FIRE_CHART=null;}
+  FIRE_CHART=new Chart(c,{type:'line',data:{labels,datasets:[
+    {label:'Förmögenhet',data:v1,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2.5,pointRadius:3,fill:true,tension:.3},
+    {label:'FIRE-mål',data:v2,borderColor:'#2dd4ff',borderWidth:2,borderDash:[5,4],pointRadius:0,fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true,labels:{color:'rgba(255,255,255,.5)',font:{size:13},boxWidth:14,padding:16}},
+      tooltip:{callbacks:{
+        title:ctx=>ctx[0].label,
+        label:ctx=>ctx[0].dataset.label+': '+new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(ctx[0].raw)+' kr'
+      }}
+    },
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.45)',font:{size:13},maxTicksLimit:7}},
+      y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.45)',font:{size:13},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'k':v}}
+    }}});
 }
 
+function bindFireEvents(){
+  const fmtKr=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v))+' kr';
+  function updateInPlace(){
+    const nw=derive(MONTH).netWorth;
+    const target=(FIRE.monthlySpend*12)/0.04;
+    const pct=Math.min(100,nw/target*100);
+    const pctCol=pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff';
+    const ret=FIRE.expectedReturn/100,sav=FIRE.monthlySaving;
+    function yrsTo(t){if(nw>=t)return 0;let w=nw,y=0;while(w<t&&y<100){w=w*(1+ret)+sav*12;y++;}return y<100?y:null;}
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    set('mal-fire-num',fmtKr(target));
+    set('mal-fire-sub',fmtKr(FIRE.monthlySpend)+'/mån · 4%-regeln');
+    set('mal-pct',pct.toFixed(1)+'%');
+    set('mal-achieved',fmtKr(nw)+' uppnått');
+    set('mal-remaining',fmtKr(Math.max(0,target-nw))+' kvar');
+    set('mal-time',yrsTo(target)!==null?`Uppskattad tid till FIRE: ca ${yrsTo(target)} år (${FIRE.expectedReturn}% avkastning, ${fmtKr(sav)}/mån)`:'Justera sparande för att nå målet');
+    set('mal-w3m',fmtKr(nw*0.03/12));set('mal-w3y',fmtKr(nw*0.03)+'/år');
+    set('mal-w4m',fmtKr(nw*0.04/12));set('mal-w4y',fmtKr(nw*0.04)+'/år');
+    const bar=document.getElementById('mal-bar');if(bar){bar.style.width=pct+'%';}
+    const pctEl=document.getElementById('mal-pct');if(pctEl)pctEl.style.color=pctCol;
+    drawFireChart(derive(MONTH));
+  }
+  ['fire-spend','fire-sav','fire-ret'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.oninput=e=>{
+      const keyMap={'fire-spend':'monthlySpend','fire-sav':'monthlySaving','fire-ret':'expectedReturn'};const key=keyMap[id];
+      FIRE[key]=parseFloat(e.target.value);
+      const outId={'fire-spend':'out-spend','fire-sav':'out-sav','fire-ret':'out-ret'}[id];
+      const out=document.getElementById(outId);
+      if(out)out.textContent=id==='fire-ret'?FIRE[key].toFixed(1)+'%':fmtKr(FIRE[key]);
+      updateInPlace();
+    };
+  });
+  drawFireChart(derive(MONTH));
+}
 
 function renderModal(){
   const exportText = esc(JSON.stringify(DATA, null, 2));
@@ -711,62 +725,15 @@ function bindEvents(){
 }
 
 (async function init(){
-  DATA = await loadData();
-  if (TAB==='transaktioner'){ const t=new Date(); FORM.date = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
+  DATA=await loadData();
+  FORM.date=todayStr();
+  // restore tab from URL hash if present
+  const hash=location.hash.replace('#','');
+  if(['oversikt','transaktioner','formogenhet','mal'].includes(hash)) TAB=hash;
+  history.replaceState({tab:TAB},'','#'+TAB);
   render();
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script>
-function bindFireEvents(){
-  const D = derive(MONTH);
-  const fmtKr = v => new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v))+' kr';
-
-  function updateMalInPlace(){
-    const nw = derive(MONTH).netWorth;
-    const target = (FIRE.monthlySpend*12)/0.04;
-    const pct = Math.min(100, nw/target*100);
-    const ret = FIRE.expectedReturn/100;
-    const sav = FIRE.monthlySaving;
-    function yrsTo(t){ if(nw>=t) return 0; let w=nw,y=0; while(w<t&&y<100){w=w*(1+ret)+sav*12;y++;} return y<100?y:null; }
-    const yFire = yrsTo(target);
-
-    // Update all text values in place without re-rendering
-    const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
-    const setHTML = (id, val) => { const el=document.getElementById(id); if(el) el.innerHTML=val; };
-    set('mal-target', fmtKr(target));
-    set('mal-target-sub', fmtKr(FIRE.monthlySpend)+'/mån · 4%-regeln');
-    set('mal-pct', pct.toFixed(1)+'%');
-    set('mal-achieved', fmtKr(nw)+' uppnått');
-    set('mal-remaining', fmtKr(Math.max(0,target-nw))+' kvar');
-    set('mal-time', yFire!==null ? `Uppskattad tid till FIRE: ca ${yFire} år (${FIRE.expectedReturn}% avkastning, ${fmtKr(sav)}/mån sparande)` : 'Justera sparande för att nå målet');
-    set('mal-w3m', fmtKr(nw*0.03/12));
-    set('mal-w3y', fmtKr(nw*0.03)+'/år');
-    set('mal-w4m', fmtKr(nw*0.04/12));
-    set('mal-w4y', fmtKr(nw*0.04)+'/år');
-    const bar = document.getElementById('mal-bar');
-    if(bar){ bar.style.width=pct+'%'; bar.style.background=pct>=100?'#00e5a0':pct>=50?'#ffb454':'linear-gradient(90deg,#2dd4ff,#00e5a0)'; }
-    const pctEl = document.getElementById('mal-pct');
-    if(pctEl) pctEl.style.color = pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff';
-    drawFireChart(derive(MONTH));
-  }
-
-  function onSlide(id, key, outId, display){
-    const el = document.getElementById(id); if(!el) return;
-    el.oninput = e => {
-      FIRE[key] = parseFloat(e.target.value);
-      const out = document.getElementById(outId);
-      if(out) out.textContent = display(FIRE[key]);
-      updateMalInPlace();
-    };
-    // on mouseup/touchend, no full re-render needed
-  }
-
-  onSlide('fire-spend','monthlySpend','out-spend', fmtKr);
-  onSlide('fire-sav','monthlySaving','out-sav', fmtKr);
-  onSlide('fire-ret','expectedReturn','out-ret', v=>parseFloat(v).toFixed(1)+'%');
-  drawFireChart(D);
-}
-</script>
 </body>
 </html>
