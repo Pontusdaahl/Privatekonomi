@@ -66,22 +66,25 @@ input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;back
   border-top:1px solid #1a2128;
   padding:6px 0 env(safe-area-inset-bottom,6px);}
 #bottom-nav button{flex:1;background:none;border:none;color:#5d6b76;cursor:pointer;
-  padding:6px 2px;font-family:'Courier New',monospace;font-size:8px;
-  letter-spacing:.06em;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  padding:10px 2px;font-family:'Courier New',monospace;font-size:10px;
+  letter-spacing:.06em;display:flex;flex-direction:column;align-items:center;gap:5px;
+  min-height:60px;}
 #bottom-nav button.bnav-active{color:#00e5a0;}
-#bottom-nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
+#bottom-nav button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;}
 
 @media(max-width:700px){
   #bottom-nav{display:flex;}
   body{padding-bottom:0;}
-  #main-wrap{padding-bottom:72px !important;}
+  #main-wrap{padding:14px !important;padding-bottom:72px !important;}
+  #main-wrap header{display:none;}
+  #main-wrap nav{display:none;}
   /* MAL mobile overrides - !important beats inline styles */
   #mal-fire-num{font-size:22px !important;}
   #mal-nw-num{font-size:22px !important;}
   #mal-pct{font-size:24px !important;}
   #mal-bar-wrap{height:14px !important;}
   #mal-w3m,#mal-w4m{font-size:20px !important;}
-  #mal-page{padding:14px !important;padding-bottom:80px !important;}
+  #mal-page{padding:14px !important;padding-bottom:80px !important;margin:-14px !important;}
 }
 </style>
 </head>
@@ -230,7 +233,7 @@ function render(){
   updateBottomNav();
 }
 
-function card(content,style=''){return`<div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;${style}">${content}</div>`;}
+function card(content,style=''){return`<div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;${style}">${content}</div>`;}
 function row(l,v,col){return`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16px;color:#8b97a3;">${l}</span><span style="font-size:15px;color:${col};">${v}</span></div>`;}
 function catBreakdown(e){
   const total=Object.values(e).reduce((a,v)=>a+v,0)||1,entries=Object.entries(e).sort((a,b)=>b[1]-a[1]);
@@ -252,7 +255,7 @@ function renderOversikt(D){
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
         <span style="font-size:15.3px;color:#d4ddd9;">${esc(c)}</span>
         <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          ${fmt(spent)} / <input data-budget="${esc(c)}" value="${limit||''}" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+          ${fmt(spent)} / <input data-budget="${esc(c)}" value="${limit||''}" placeholder="tak" inputmode="numeric" style="width:70px;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
         </span>
       </div>
       <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
@@ -351,16 +354,16 @@ function renderTx(D){
       <div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:16px;">NY POST</div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">${typeBtns}</div>
       <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">BELOPP</div>
-      <input id="f-amount" value="${esc(FORM.amount)}" placeholder="0" inputmode="decimal" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:12px 14px;color:#eef4f1;font-size:20.1px;font-weight:600;margin-bottom:14px;">
+      <input id="f-amount" value="${esc(FORM.amount)}" placeholder="0" inputmode="decimal" style="width:100%;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px 14px;color:#eef4f1;font-size:20.1px;font-weight:600;margin-bottom:14px;">
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-direction:column;">
         <div style="flex:1;">
           <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">KATEGORI</div>
-          <select id="f-category" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:11px;color:#dbe6ec;font-size:15.3px;">${catOpts}</select>
+          <select id="f-category" style="width:100%;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px;color:#dbe6ec;font-size:15.3px;">${catOpts}</select>
         </div>
         <div style="flex:1;">
           <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">DATUM</div>
           <div style="position:relative;width:100%;">
-            <input id="f-date" type="date" value="${esc(FORM.date)}" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:10px 42px 10px 10px;color:#dbe6ec;font-size:15.3px;-webkit-appearance:none;appearance:none;">
+            <input id="f-date" type="date" value="${esc(FORM.date)}" style="width:100%;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:10px 42px 10px 10px;color:#dbe6ec;font-size:15.3px;-webkit-appearance:none;appearance:none;">
             <svg viewBox="0 0 24 24" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);width:18px;height:18px;pointer-events:none;flex-shrink:0;" fill="none" stroke="#e6edf3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="5" width="18" height="16" rx="2"></rect>
               <line x1="16" y1="3" x2="16" y2="7"></line>
@@ -371,7 +374,7 @@ function renderTx(D){
         </div>
       </div>
       <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">ANTECKNING</div>
-      <input id="f-note" value="${esc(FORM.note)}" placeholder="valfritt..." style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:11px 14px;color:#dbe6ec;font-size:16.5px;margin-bottom:16px;">
+      <input id="f-note" value="${esc(FORM.note)}" placeholder="valfritt..." style="width:100%;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 14px;color:#dbe6ec;font-size:16.5px;margin-bottom:16px;">
       <button id="btn-add" style="width:100%;background:linear-gradient(180deg,#00e5a0,#04b384);color:#04130d;border:none;border-radius:12px;padding:13px;font-weight:700;cursor:pointer;font-size:15.3px;">+ LÄGG TILL POST</button>
     `)}
     ${card(`
@@ -390,8 +393,8 @@ function renderFormogenhet(D){
     const items = grouped[c].slice().sort((x,y)=>(x.name||'').localeCompare(y.name||'','sv'));
     const rows = items.map(a=>`
       <div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #141a20;">
-        <input data-asset-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;">
-        <input data-asset-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#00e5a0;font-size:15.3px;text-align:right;">
+        <input data-asset-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;">
+        <input data-asset-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;color:#00e5a0;font-size:15.3px;text-align:right;">
         <button data-delasset="${a.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;flex-shrink:0;">×</button>
       </div>`).join('');
     return `<div style="margin-top:14px;">
@@ -401,8 +404,8 @@ function renderFormogenhet(D){
   }).join('') : `<div style="padding:18px 0;text-align:center;font-size:13.6px;color:#465058;">Lägg till en tillgång ovan</div>`;
   const debtRows = DATA.debts.map(a=>`
     <div style="display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #141a20;">
-      <input data-debt-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;">
-      <input data-debt-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#ff5e7a;font-size:15.3px;text-align:right;">
+      <input data-debt-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;">
+      <input data-debt-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;color:#ff5e7a;font-size:15.3px;text-align:right;">
       <button data-deldebt="${a.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;flex-shrink:0;">×</button>
     </div>`).join('') || `<div style="padding:18px 0;text-align:center;font-size:13.6px;color:#465058;">Inga skulder registrerade</div>`;
 
@@ -423,18 +426,18 @@ function renderFormogenhet(D){
     ${card(`
       <div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">TILLGÅNGAR</div>
       <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <input id="a-name" value="${esc(ASSETFORM.name)}" placeholder="t.ex. Sparkonto, bostad..." style="flex:1;min-width:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;">
-        <input id="a-value" value="${esc(ASSETFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;">
+        <input id="a-name" value="${esc(ASSETFORM.name)}" placeholder="t.ex. Sparkonto, bostad..." style="flex:1;min-width:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;">
+        <input id="a-value" value="${esc(ASSETFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;">
         <button id="btn-addasset" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.4);color:#00e5a0;border-radius:10px;width:40px;flex-shrink:0;font-size:21.2px;cursor:pointer;">+</button>
       </div>
-      <select id="a-category" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 10px;color:#dbe6ec;font-size:13.6px;margin-bottom:14px;">${catOptsFor(ASSETFORM.category)}</select>
+      <select id="a-category" style="width:100%;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 10px;color:#dbe6ec;font-size:13.6px;margin-bottom:14px;">${catOptsFor(ASSETFORM.category)}</select>
       ${assetRows}
     `)}
     ${card(`
       <div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">SKULDER</div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <input id="d-name" value="${esc(DEBTFORM.name)}" placeholder="t.ex. bolån..." style="flex:1;min-width:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;">
-        <input id="d-value" value="${esc(DEBTFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;">
+        <input id="d-name" value="${esc(DEBTFORM.name)}" placeholder="t.ex. bolån..." style="flex:1;min-width:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;">
+        <input id="d-value" value="${esc(DEBTFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:rgba(6,8,10,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;">
         <button id="btn-adddebt" style="background:rgba(255,94,122,.12);border:1px solid rgba(255,94,122,.4);color:#ff5e7a;border-radius:10px;width:40px;flex-shrink:0;font-size:21.2px;cursor:pointer;">+</button>
       </div>
       ${debtRows}
