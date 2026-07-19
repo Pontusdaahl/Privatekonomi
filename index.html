@@ -233,7 +233,7 @@ async function doSaveFire(){
   }catch(e){
     if(status){status.textContent='✗ Fel: '+e.message;status.style.color='#ff5e7a';}
   }
-  if(btn)btn.textContent='💾 SPARA INSTÄLLNINGAR';
+  if(btn)btn.textContent='SPARA';
 }
 async function loadFire(){
   try{
@@ -644,7 +644,7 @@ function renderMal(D){
             <div style="display:flex;justify-content:space-between;font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;"><span>Förväntad avkastning</span><span id="out-ret" style="color:#eef4f1;font-weight:600;">${FIRE.expectedReturn}%</span></div>
             <input type="range" class="fire-sl" id="fire-ret" min="1" max="15" step="0.5" value="${FIRE.expectedReturn}">
           </div>
-          <button id="btn-save-fire" onclick="doSaveFire()" style="width:100%;margin-top:22px;padding:14px;background:linear-gradient(180deg,#00e5a0,#04b384);border:none;border-radius:12px;color:#04130d;font-weight:700;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;">💾 SPARA INSTÄLLNINGAR</button>
+          <button id="btn-save-fire" onclick="doSaveFire()" style="width:100%;margin-top:22px;padding:14px;background:linear-gradient(180deg,#00e5a0,#04b384);border:none;border-radius:12px;color:#04130d;font-weight:700;font-size:15px;cursor:pointer;font-family:'Courier New',monospace;">SPARA</button>
           <div id="fire-save-status" style="margin-top:10px;font-size:13px;text-align:center;height:18px;"></div>
         </div>
         <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;">
