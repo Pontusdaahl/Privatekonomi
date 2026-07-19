@@ -7,6 +7,11 @@
 <style>
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;background:#07090b;font-family:'Courier New',monospace;}
+#global-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(rgba(7,9,11,.72),rgba(7,9,11,.72)),url('https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg') center/cover no-repeat;}
+@media(max-width:700px){#global-bg{background:linear-gradient(rgba(7,9,11,.72),rgba(7,9,11,.72)),url('https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg') center/cover no-repeat;}}
+#root{position:relative;z-index:1;}
+#bottom-nav{z-index:100;}
 body{color:#e6edf3;}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:#1b242d;border-radius:6px}
@@ -49,10 +54,10 @@ input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;back
 
 /* Desktop big numbers on MAL page */
 @media(min-width:701px){
-  #mal-fire-num{font-size:72px !important;}
-  #mal-nw-num{font-size:72px !important;}
-  #mal-pct{font-size:64px !important;}
-  #mal-w3m,#mal-w4m{font-size:52px !important;}
+  #mal-fire-num{font-size:42px !important;}
+  #mal-nw-num{font-size:42px !important;}
+  #mal-pct{font-size:38px !important;}
+  #mal-w3m,#mal-w4m{font-size:32px !important;}
 }
 
 /* Bottom nav */
@@ -81,6 +86,7 @@ input[type=range].fire-sl::-moz-range-progress{height:8px;border-radius:8px;back
 </style>
 </head>
 <body>
+<div id="global-bg"></div>
 <div id="root">Laddar...</div>
 <div id="bottom-nav">
   <button id="bnav-oversikt" onclick="setTab('oversikt')">
@@ -110,9 +116,11 @@ let MONTH=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth(
 let FORM={type:'expense',amount:'',category:'Bostad',date:MONTH+'-01',note:''};
 let ASSETFORM={name:'',value:'',category:'Aktier/fonder'};
 let DEBTFORM={name:'',value:''};
-let FIRE={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
+const FIRE_DEFAULTS={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
   bgUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg',
   bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg'};
+let FIRE=(()=>{try{const s=localStorage.getItem('pk-fire');if(s)return Object.assign({},FIRE_DEFAULTS,JSON.parse(s));}catch(e){}return Object.assign({},FIRE_DEFAULTS);})();
+function saveFire(){try{localStorage.setItem('pk-fire',JSON.stringify({monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving}));}catch(e){}}
 
 const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
 const ASSET_CATS=['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
@@ -182,7 +190,7 @@ function derive(month){
 function render(){
   const D=derive(MONTH);
   document.getElementById('root').innerHTML=`
-  <div style="min-height:100vh;color:#e6edf3;background:radial-gradient(1100px 560px at 80% -10%,rgba(45,212,255,.08),transparent 60%),radial-gradient(900px 480px at -8% 104%,rgba(0,229,160,.07),transparent 55%),#07090b;">
+  <div style="min-height:100vh;color:#e6edf3;background:transparent;">
   <div id="main-wrap" style="max-width:1400px;margin:0 auto;padding:28px;">
     <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:14px;">
@@ -445,9 +453,8 @@ function renderMal(D){
   const w3=nw*0.03,w4=nw*0.04;
   const pctCol=pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff';
   return `
-  <div id="mal-page" style="margin:-28px;padding:40px;position:relative;min-height:100vh;">
-    <div id="mal-bg" style="position:fixed;inset:0;z-index:0;background:linear-gradient(rgba(7,9,11,.55),rgba(7,9,11,.55)),url('${FIRE.bgUrl}') center/cover no-repeat;"></div>
-    <style>@media(max-width:700px){#mal-bg{background:linear-gradient(rgba(7,9,11,.55),rgba(7,9,11,.55)),url('${FIRE.bgMobUrl}') center/cover no-repeat !important;}}</style>
+  <div id="mal-page" style="margin:-28px;padding:40px;position:relative;min-height:100vh;background:transparent;">
+
     <div style="position:relative;z-index:1;max-width:1400px;margin:0 auto;">
 
       <div style="background:rgba(11,14,17,.42);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:36px;margin-bottom:20px;">
@@ -583,6 +590,7 @@ function bindFireEvents(){
       const outId={'fire-spend':'out-spend','fire-sav':'out-sav','fire-ret':'out-ret'}[id];
       const out=document.getElementById(outId);
       if(out)out.textContent=id==='fire-ret'?FIRE[key].toFixed(1)+'%':fmtKr(FIRE[key]);
+      saveFire();
       updateInPlace();
     };
   });
