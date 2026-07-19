@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- saved from url=(0086)file://bestnet.se/Shared/3041-Users/Pontus3663/Downloads/privatekonomi_firebase_2.html -->
-<html lang="sv"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="sv">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privatekonomi Terminal</title>
 <style>
@@ -21,332 +21,7 @@
 </style>
 </head>
 <body>
-<div id="root">
-  <div style="min-height:100vh;color:#e6edf3;background:radial-gradient(1100px 560px at 80% -10%, rgba(45,212,255,.08), transparent 60%), radial-gradient(900px 480px at -8% 104%, rgba(0,229,160,.07), transparent 55%), #07090b;">
-    <div style="max-width:1180px;margin:0 auto;padding:20px;">
-      <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:14px;">
-          <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(0,229,160,.2), rgba(45,212,255,.12));border:1px solid rgba(0,229,160,.38);box-shadow:0 0 24px rgba(0,229,160,.28);font-size:23.6px;color:#00e5a0;">◆</div>
-          <div>
-            <div style="font-weight:700;letter-spacing:.14em;font-size:17.7px;color:#eef4f1;">PRIVATEKONOMI</div>
-            <div style="display:flex;align-items:center;gap:7px;font-size:11.8px;letter-spacing:.2em;color:#5d6b76;margin-top:2px;">
-              <span style="width:7px;height:7px;border-radius:50%;background:#00e5a0;box-shadow:0 0 9px #00e5a0;animation:nwpulse 2.2s infinite;display:inline-block;"></span>
-              TERMINAL · LIVE
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-          <div style="text-align:right;">
-            <div style="font-size:13px;letter-spacing:.18em;color:#5d6b76;">NETTOFÖRMÖGENHET</div>
-            <div style="margin-top:3px;font-weight:700;font-size:26px;color:#00e5a0">1&nbsp;826&nbsp;400 kr</div>
-          </div>
-          <button id="btn-openio" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.025);color:#aeb9c2;border:1px solid #222a32;border-radius:11px;padding:10px 15px;font-size:14.2px;cursor:pointer;">⇅ DATA</button>
-        </div>
-      </header>
-      <nav style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
-        <button data-tab="oversikt" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
-    border:1px solid rgba(0,229,160,.5);
-    background:linear-gradient(180deg, rgba(0,229,160,.15), rgba(0,229,160,.04));
-    color:#00e5a0;">ÖVERSIKT</button><button data-tab="transaktioner" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
-    border:1px solid #1b2228;
-    background:rgba(255,255,255,.012);
-    color:#7c8893;">TRANSAKTIONER</button><button data-tab="formogenhet" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
-    border:1px solid #1b2228;
-    background:rgba(255,255,255,.012);
-    color:#7c8893;">FÖRMÖGENHET</button><button data-tab="mal" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
-    border:1px solid #1b2228;
-    background:rgba(255,255,255,.012);
-    color:#7c8893;">MÅL &amp; FIRE</button>
-      </nav>
-      <div id="content">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button data-month="-1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20.1px;cursor:pointer;">‹</button>
-      <div style="font-size:16.5px;letter-spacing:.06em;color:#dbe6ec;min-width:160px;text-align:center;text-transform:uppercase;font-weight:600;">juli 2026</div>
-      <button data-month="1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20.1px;cursor:pointer;">›</button>
-    </div>
-    <div style="font-size:13px;color:#5d6b76;">23 poster denna månad</div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:14px;">
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">INKOMSTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#00e5a0;">34&nbsp;598 kr</div></div>
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">UTGIFTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#ff5e7a;">14&nbsp;733 kr</div></div>
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">INVESTERAT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#2dd4ff;">1&nbsp;250 kr</div></div>
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">SPARKVOT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#00e5a0;">57%</div><div style="font-size:11.8px;color:#5d6b76;margin-top:3px;">19&nbsp;865 kr sparat</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px;">
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">MÅNADSBUDGET</div><div style="margin-bottom:13px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
-        <span style="font-size:15.3px;color:#d4ddd9;">Bostad</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          3&nbsp;246 kr / <input data-budget="Bostad" value="6000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
-        </span>
-      </div>
-      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
-        <div style="width:54.1%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
-      </div>
-    </div><div style="margin-bottom:13px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
-        <span style="font-size:15.3px;color:#d4ddd9;">Kläder</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          0 kr / <input data-budget="Kläder" value="1000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
-        </span>
-      </div>
-      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
-        <div style="width:0%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
-      </div>
-    </div><div style="margin-bottom:13px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
-        <span style="font-size:15.3px;color:#d4ddd9;">Mat</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          40 kr / <input data-budget="Mat" value="4000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
-        </span>
-      </div>
-      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
-        <div style="width:1%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
-      </div>
-    </div><div style="margin-bottom:13px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
-        <span style="font-size:15.3px;color:#d4ddd9;">Nöje</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          1&nbsp;918 kr / <input data-budget="Nöje" value="3000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
-        </span>
-      </div>
-      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
-        <div style="width:63.93333333333333%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
-      </div>
-    </div><div style="margin-bottom:13px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
-        <span style="font-size:15.3px;color:#d4ddd9;">Transport</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          2&nbsp;884 kr / <input data-budget="Transport" value="4000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
-        </span>
-      </div>
-      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
-        <div style="width:72.1%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
-      </div>
-    </div><div style="margin-bottom:13px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
-        <span style="font-size:15.3px;color:#d4ddd9;">Övrigt</span>
-        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
-          6&nbsp;645 kr / <input data-budget="Övrigt" value="2000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
-        </span>
-      </div>
-      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
-        <div style="width:100%;height:100%;background:#ff5e7a;box-shadow:0 0 10px #ff5e7a;border-radius:6px;"></div>
-      </div>
-    </div></div>
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">UTGIFTER KATEGORI</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
-      <span style="font-size:15.3px;font-weight:700;color:#00e5a0;width:20px;">01</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Övrigt</span>
-          <span style="font-size:14.2px;color:#cdd8d4;">6&nbsp;645 kr</span>
-        </div>
-        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
-          <div style="width:45.102830380777846%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
-        </div>
-      </div>
-      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">45%</span>
-    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
-      <span style="font-size:15.3px;font-weight:700;color:#2dd4ff;width:20px;">02</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Bostad</span>
-          <span style="font-size:14.2px;color:#cdd8d4;">3&nbsp;246 kr</span>
-        </div>
-        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
-          <div style="width:22.0321726735899%;height:100%;background:#2dd4ff;box-shadow:0 0 8px #2dd4ff;"></div>
-        </div>
-      </div>
-      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">22%</span>
-    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
-      <span style="font-size:15.3px;font-weight:700;color:#ffb454;width:20px;">03</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Transport</span>
-          <span style="font-size:14.2px;color:#cdd8d4;">2&nbsp;884 kr</span>
-        </div>
-        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
-          <div style="width:19.575103509129164%;height:100%;background:#ffb454;box-shadow:0 0 8px #ffb454;"></div>
-        </div>
-      </div>
-      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">20%</span>
-    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
-      <span style="font-size:15.3px;font-weight:700;color:#ff5e7a;width:20px;">04</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Nöje</span>
-          <span style="font-size:14.2px;color:#cdd8d4;">1&nbsp;918 kr</span>
-        </div>
-        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
-          <div style="width:13.018394081314058%;height:100%;background:#ff5e7a;box-shadow:0 0 8px #ff5e7a;"></div>
-        </div>
-      </div>
-      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">13%</span>
-    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
-      <span style="font-size:15.3px;font-weight:700;color:#a78bfa;width:20px;">05</span>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Mat</span>
-          <span style="font-size:14.2px;color:#cdd8d4;">40 kr</span>
-        </div>
-        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
-          <div style="width:3%;height:100%;background:#a78bfa;box-shadow:0 0 8px #a78bfa;"></div>
-        </div>
-      </div>
-      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">0%</span>
-    </div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;">
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">HELÅR 2026</div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Inkomster</span><span style="font-size:15.3px;color:#00e5a0;">250&nbsp;077 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Utgifter</span><span style="font-size:15.3px;color:#ff5e7a;">179&nbsp;204 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Investerat</span><span style="font-size:15.3px;color:#2dd4ff;">63&nbsp;480 kr</span></div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">70&nbsp;873 kr · 28%</span></div>
-      <div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div>
-      <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>
-      <div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Nöje</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">60&nbsp;552 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">34%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:33.789424343206626%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Bostad</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">34&nbsp;285 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">19%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:19.131827414566636%;height:100%;background:#2dd4ff;box-shadow:0 0 8px #2dd4ff;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Transport</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">32&nbsp;128 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">18%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:17.92817124617754%;height:100%;background:#ffb454;box-shadow:0 0 8px #ffb454;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Mat</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">24&nbsp;283 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">14%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:13.550478783955716%;height:100%;background:#ff5e7a;box-shadow:0 0 8px #ff5e7a;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Övrigt</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">22&nbsp;139 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">12%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:12.354076917925939%;height:100%;background:#a78bfa;box-shadow:0 0 8px #a78bfa;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Kläder</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">5&nbsp;817 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">3%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:3.246021294167541%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
-      </div>
-    </div></div>
-    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">SEDAN START <span style="color:#5d6b76;font-weight:500;letter-spacing:.04em;">· 2026-01-01</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Inkomster</span><span style="font-size:15.3px;color:#00e5a0;">250&nbsp;077 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Utgifter</span><span style="font-size:15.3px;color:#ff5e7a;">179&nbsp;204 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Investerat</span><span style="font-size:15.3px;color:#2dd4ff;">63&nbsp;480 kr</span></div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">70&nbsp;873 kr · 28%</span></div>
-      <div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div>
-      <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>
-      <div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Nöje</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">60&nbsp;552 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">34%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:33.789424343206626%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Bostad</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">34&nbsp;285 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">19%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:19.131827414566636%;height:100%;background:#2dd4ff;box-shadow:0 0 8px #2dd4ff;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Transport</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">32&nbsp;128 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">18%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:17.92817124617754%;height:100%;background:#ffb454;box-shadow:0 0 8px #ffb454;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Mat</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">24&nbsp;283 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">14%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:13.550478783955716%;height:100%;background:#ff5e7a;box-shadow:0 0 8px #ff5e7a;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Övrigt</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">22&nbsp;139 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">12%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:12.354076917925939%;height:100%;background:#a78bfa;box-shadow:0 0 8px #a78bfa;"></div>
-      </div>
-    </div><div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
-        <span style="font-size:14.8px;color:#d4ddd9;">Kläder</span>
-        <span style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14.2px;color:#cdd8d4;">5&nbsp;817 kr</span>
-          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">3%</span>
-        </span>
-      </div>
-      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
-        <div style="width:3.246021294167541%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
-      </div>
-    </div></div>
-  </div></div>
-    </div>
-  </div>
-  
-  </div>
+<div id="root">Laddar...</div>
 <script>
 
 function emptyData(){
@@ -723,19 +398,30 @@ function renderMal(D){
   const pct = Math.min(100, nw/fireTarget*100);
   const ret = FIRE.expectedReturn/100;
   const sav = FIRE.monthlySaving;
-  function yrsTo(target){ if(nw>=target) return 0; let w=nw,y=0; while(w<target&&y<100){w=w*(1+ret)+sav*12;y++;} return y<100?y:null; }
+  function yrsTo(t){ if(nw>=t) return 0; let w=nw,y=0; while(w<t&&y<100){w=w*(1+ret)+sav*12;y++;} return y<100?y:null; }
   const yFire = yrsTo(fireTarget);
   const withdraw3 = nw*0.03, withdraw4 = nw*0.04;
-  const bgUrl = FIRE.bgUrl || '';
-  const bgMobUrl = FIRE.bgMobUrl || bgUrl;
-  const bgStyle = bgUrl ? `background:linear-gradient(rgba(7,9,11,.80),rgba(7,9,11,.80)),url('${bgUrl}') center/cover no-repeat` : 'background:#07090b';
-
-  const growthData = [];
-  let w2 = nw;
-  for(let y=0;y<=20;y++){ growthData.push({y:Math.round(w2),t:fireTarget}); w2=w2*(1+ret)+sav*12; }
+  const bgD = FIRE.bgUrl;
+  const bgM = FIRE.bgMobUrl || bgD;
 
   return `
-  <div id="fire-hero-bg" style="${bgStyle};border-radius:16px;padding:20px;margin-bottom:14px;">
+  <style>
+    #mal-page{position:relative;min-height:100vh;margin:-20px;padding:20px;}
+    #mal-bg{position:fixed;inset:0;z-index:0;background:linear-gradient(rgba(7,9,11,.78),rgba(7,9,11,.78)),url('${bgD}') center/cover no-repeat;}
+    @media(max-width:600px){#mal-bg{background:linear-gradient(rgba(7,9,11,.78),rgba(7,9,11,.78)),url('${bgM}') center/cover no-repeat;}}
+    #mal-content{position:relative;z-index:1;}
+    .sl-wrap{margin-bottom:14px;}
+    .sl-header{display:flex;justify-content:space-between;font-size:12px;color:#8b97a3;margin-bottom:6px;}
+    .sl-val{color:#dbe6ec;font-weight:600;}
+    input[type=range].fire-sl{width:100%;height:6px;border-radius:6px;background:#1a2128;outline:none;cursor:pointer;accent-color:#00e5a0;}
+    input[type=range].fire-sl::-webkit-slider-thumb{width:22px;height:22px;border-radius:50%;background:#00e5a0;cursor:pointer;border:3px solid #07090b;box-shadow:0 0 8px rgba(0,229,160,.5);}
+    input[type=range].fire-sl::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#00e5a0;cursor:pointer;border:3px solid #07090b;}
+  </style>
+  <div id="mal-bg"></div>
+  <div id="mal-page">
+  <div id="mal-content">
+
+  <div style="background:rgba(11,14,17,.72);backdrop-filter:blur(8px);border:1px solid #1a2128;border-radius:16px;padding:20px;margin-bottom:14px;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
       <div>
         <div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">FRIHETSMÅL</div>
@@ -744,71 +430,68 @@ function renderMal(D){
       </div>
       <div style="text-align:right;">
         <div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">NULÄGE</div>
-        <div style="font-size:28px;font-weight:700;color:${nw>=0?'#2dd4ff':'#ff5e7a'};margin-top:4px;">${fmt(nw)}</div>
-        <div style="font-size:13px;color:#5d6b76;margin-top:2px;">Ålder ${calcAge()} år (f. 1998)</div>
+        <div style="font-size:28px;font-weight:700;color:#2dd4ff;margin-top:4px;">${fmt(nw)}</div>
+        <div style="font-size:13px;color:#5d6b76;margin-top:2px;">Ålder ${calcAge()} år</div>
       </div>
     </div>
-    <div style="margin-bottom:10px;">
+    <div>
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
         <span style="font-size:13px;color:#aeb9c2;">Framsteg mot FIRE</span>
-        <span style="font-size:22px;font-weight:700;color:${pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff'};">${pct.toFixed(1)}%</span>
+        <span style="font-size:24px;font-weight:700;color:${pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff'};">${pct.toFixed(1)}%</span>
       </div>
       <div style="height:16px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden;">
-        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2dd4ff,#00e5a0);border-radius:10px;transition:width .4s;"></div>
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2dd4ff,#00e5a0);border-radius:10px;"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#5d6b76;">
         <span>${fmt(nw)} uppnått</span>
         <span>${fmt(Math.max(0,fireTarget-nw))} kvar</span>
       </div>
     </div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07);">
-      <div style="font-size:11px;color:#5d6b76;margin-bottom:6px;">${yFire!==null?`Uppskattad tid till FIRE: ca ${yFire} år (vid ${FIRE.expectedReturn}% avkastning och ${fmt(sav)}/mån)`:'Justera sparande för att nå målet'}</div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:#5d6b76;">
+      ${yFire!==null ? `Uppskattad tid till FIRE: ca ${yFire} år (${FIRE.expectedReturn}% avkastning, ${fmt(sav)}/mån sparande)` : 'Justera sparande för att nå målet'}
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;">
-    ${card(`<div style="font-size:10px;letter-spacing:.14em;color:#5d6b76;margin-bottom:8px;">3%-REGELN (KONSERVATIV)</div><div style="font-size:22px;font-weight:700;color:#00e5a0;">${fmt(withdraw3/12)}<span style="font-size:13px;font-weight:400;color:#5d6b76;">/mån</span></div><div style="font-size:12px;color:#5d6b76;margin-top:4px;">${fmt(withdraw3)}/år</div>`)}
-    ${card(`<div style="font-size:10px;letter-spacing:.14em;color:#5d6b76;margin-bottom:8px;">4%-REGELN (STANDARD)</div><div style="font-size:22px;font-weight:700;color:#2dd4ff;">${fmt(withdraw4/12)}<span style="font-size:13px;font-weight:400;color:#5d6b76;">/mån</span></div><div style="font-size:12px;color:#5d6b76;margin-top:4px;">${fmt(withdraw4)}/år</div>`)}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+    <div style="background:rgba(11,14,17,.72);backdrop-filter:blur(8px);border:1px solid #1a2128;border-radius:16px;padding:18px;">
+      <div style="font-size:10px;letter-spacing:.14em;color:#5d6b76;margin-bottom:8px;">3%-REGELN</div>
+      <div style="font-size:22px;font-weight:700;color:#00e5a0;">${fmt(withdraw3/12)}<span style="font-size:12px;font-weight:400;color:#5d6b76;">/mån</span></div>
+      <div style="font-size:12px;color:#5d6b76;margin-top:4px;">${fmt(withdraw3)}/år</div>
+    </div>
+    <div style="background:rgba(11,14,17,.72);backdrop-filter:blur(8px);border:1px solid #1a2128;border-radius:16px;padding:18px;">
+      <div style="font-size:10px;letter-spacing:.14em;color:#5d6b76;margin-bottom:8px;">4%-REGELN</div>
+      <div style="font-size:22px;font-weight:700;color:#2dd4ff;">${fmt(withdraw4/12)}<span style="font-size:12px;font-weight:400;color:#5d6b76;">/mån</span></div>
+      <div style="font-size:12px;color:#5d6b76;margin-top:4px;">${fmt(withdraw4)}/år</div>
+    </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px;">
-    ${card(`
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px;">
+    <div style="background:rgba(11,14,17,.72);backdrop-filter:blur(8px);border:1px solid #1a2128;border-radius:16px;padding:20px;">
       <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:16px;">INSTÄLLNINGAR</div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Månadsutgift (kr)</div>
-            <input type="number" id="fire-spend" min="1000" max="500000" step="1000" value="${FIRE.monthlySpend}" inputmode="numeric" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:11px 12px;color:#00e5a0;font-size:15px;font-weight:600;">
-          </div>
-          <div>
-            <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Månadsparande (kr)</div>
-            <input type="number" id="fire-sav" min="0" max="200000" step="500" value="${FIRE.monthlySaving}" inputmode="numeric" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:11px 12px;color:#2dd4ff;font-size:15px;font-weight:600;">
-          </div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Förväntad avkastning per år (%)</div>
-          <input type="number" id="fire-ret" min="0" max="20" step="0.5" value="${FIRE.expectedReturn}" inputmode="decimal" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:11px 12px;color:#dbe6ec;font-size:15px;font-weight:600;">
-        </div>
-        <div>
-          <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Bakgrundsbild desktop (URL)</div>
-          <input id="fire-bg" value="${FIRE.bgUrl}" placeholder="https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 12px;color:#dbe6ec;font-size:12px;">
-        </div>
-        <div>
-          <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Bakgrundsbild mobil (URL)</div>
-          <input id="fire-bg-mob" value="${FIRE.bgMobUrl||''}" placeholder="https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 12px;color:#dbe6ec;font-size:12px;">
-        </div>
-        ${bgUrl ? `<style>#fire-hero-bg{background:linear-gradient(rgba(7,9,11,.80),rgba(7,9,11,.80)),url('${bgUrl}') center/cover no-repeat}@media(max-width:600px){#fire-hero-bg{background:linear-gradient(rgba(7,9,11,.80),rgba(7,9,11,.80)),url('${bgMobUrl||bgUrl}') center/cover no-repeat}}</style>` : ''}
+      <div class="sl-wrap">
+        <div class="sl-header"><span>Månadsutgift</span><span class="sl-val" id="out-spend">${fmt(FIRE.monthlySpend)}</span></div>
+        <input type="range" class="fire-sl" id="fire-spend" min="5000" max="150000" step="1000" value="${FIRE.monthlySpend}">
       </div>
-    `)}
-    ${card(`
+      <div class="sl-wrap">
+        <div class="sl-header"><span>Månadsparande</span><span class="sl-val" id="out-sav">${fmt(FIRE.monthlySaving)}</span></div>
+        <input type="range" class="fire-sl" id="fire-sav" min="0" max="60000" step="500" value="${FIRE.monthlySaving}">
+      </div>
+      <div class="sl-wrap">
+        <div class="sl-header"><span>Förväntad avkastning</span><span class="sl-val" id="out-ret">${FIRE.expectedReturn}%</span></div>
+        <input type="range" class="fire-sl" id="fire-ret" min="1" max="15" step="0.5" value="${FIRE.expectedReturn}">
+      </div>
+    </div>
+    <div style="background:rgba(11,14,17,.72);backdrop-filter:blur(8px);border:1px solid #1a2128;border-radius:16px;padding:20px;">
       <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">TILLVÄXTPROGNOS (20 ÅR)</div>
-      <div style="position:relative;height:220px;"><canvas id="fire-chart" role="img" aria-label="Linjediagram för förmögenhetstillväxt mot FIRE-mål">Förmögenhetsprognos 20 år.</canvas></div>
-      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;">
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#00e5a0;display:inline-block;"></span><span style="color:#8b97a3;">Förmögenhet</span></span>
-        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#2dd4ff;display:inline-block;"></span><span style="color:#8b97a3;">FIRE-mål</span></span>
+      <div style="position:relative;width:100%;height:200px;"><canvas id="fire-chart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:3px;background:#00e5a0;display:inline-block;border-radius:2px;"></span><span style="color:#8b97a3;">Förmögenhet</span></span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:3px;background:#2dd4ff;border-radius:2px;display:inline-block;"></span><span style="color:#8b97a3;">FIRE-mål</span></span>
       </div>
-    `)}
-  </div>`;
+    </div>
+  </div>
+
+  </div></div>`;
 }
 
 function drawFireChart(D){
@@ -818,20 +501,20 @@ function drawFireChart(D){
   const ret = FIRE.expectedReturn/100;
   const sav = FIRE.monthlySaving;
   const target = (FIRE.monthlySpend*12)/0.04;
-  const labels=[], vals1=[], vals2=[];
+  const labels=[], v1=[], v2=[];
   let w=nw;
   for(let y=0;y<=20;y++){
     labels.push(y===0?'Nu':y+'å');
-    vals1.push(Math.round(w));
-    vals2.push(Math.round(target));
+    v1.push(Math.round(w));
+    v2.push(Math.round(target));
     w=w*(1+ret)+sav*12;
   }
   if(FIRE_CHART){ FIRE_CHART.destroy(); FIRE_CHART=null; }
   FIRE_CHART = new Chart(c,{
     type:'line',
     data:{labels,datasets:[
-      {label:'Förmögenhet',data:vals1,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,pointRadius:2,fill:true,tension:.3},
-      {label:'FIRE-mål',data:vals2,borderColor:'#2dd4ff',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+      {label:'Förmögenhet',data:v1,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,pointRadius:2,fill:true,tension:.3},
+      {label:'FIRE-mål',data:v2,borderColor:'#2dd4ff',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -843,6 +526,7 @@ function drawFireChart(D){
     }
   });
 }
+
 
 function renderModal(){
   const exportText = esc(JSON.stringify(DATA, null, 2));
@@ -985,28 +669,27 @@ function bindEvents(){
   render();
 })();
 </script>
-<script src="./Index_files/chart.umd.js.nedladdning"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 function bindFireEvents(){
   const D = derive(MONTH);
-  const sl = (id, key, outId, fmt2) => {
-    const el = document.getElementById(id);
-    if(!el) return;
+  const fmtKr = v => new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v))+' kr';
+  function onSlide(id, key, outId, display){
+    const el = document.getElementById(id); if(!el) return;
     el.oninput = e => {
       FIRE[key] = parseFloat(e.target.value);
       const out = document.getElementById(outId);
-      if(out) out.textContent = fmt2 ? fmt2(FIRE[key]) : FIRE[key];
-      document.getElementById('content').innerHTML = renderMal(derive(MONTH));
-      bindFireEvents();
-      drawFireChart(derive(MONTH));
+      if(out) out.textContent = display(FIRE[key]);
+      // live update only chart and hero, not full re-render
+      const heroEl = document.querySelector('#mal-content');
+      if(heroEl){ document.getElementById('content').innerHTML = renderMal(derive(MONTH)); bindFireEvents(); drawFireChart(derive(MONTH)); }
     };
-  };
-  sl('fire-spend','monthlySpend','fire-spend-out', v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v))+' kr');
-  const bg=document.getElementById('fire-bg'); if(bg) bg.onchange=e=>{FIRE.bgUrl=e.target.value.trim(); refreshMal();};
-  const bgm=document.getElementById('fire-bg-mob'); if(bgm) bgm.onchange=e=>{FIRE.bgMobUrl=e.target.value.trim(); refreshMal();};
+  }
+  onSlide('fire-spend','monthlySpend','out-spend', fmtKr);
+  onSlide('fire-sav','monthlySaving','out-sav', fmtKr);
+  onSlide('fire-ret','expectedReturn','out-ret', v=>parseFloat(v).toFixed(1)+'%');
   drawFireChart(D);
 }
 </script>
-
-
-</body></html>
+</body>
+</html>
