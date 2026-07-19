@@ -202,20 +202,31 @@ let DEBTFORM={name:'',value:''};
 const FIRE_DEFAULTS={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
   bgUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg',
   bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg'};
-let FIRE=(()=>{try{const s=localStorage.getItem('pk-fire');if(s)return Object.assign({},FIRE_DEFAULTS,JSON.parse(s));}catch(e){}return Object.assign({},FIRE_DEFAULTS);})();
-function saveFire(){
-  // Store inside DATA so it's always part of the main Firebase save
-  if(!DATA) return;
-  DATA.fireSettings={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
-  saveData();
+let FIRE=Object.assign({},FIRE_DEFAULTS);
+async function saveFire(){
+  const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
+  // Save to root-level path — completely separate from /privatekonomi so saveData() never overwrites it
+  try{
+    await fetch(FIREBASE_URL+'/pk-fire.json',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(d)
+    });
+  }catch(e){console.warn('saveFire failed',e);}
 }
 async function loadFire(){
-  // Called after loadData() — DATA already contains fireSettings if previously saved
-  if(DATA && DATA.fireSettings && typeof DATA.fireSettings.monthlySpend==='number'){
-    FIRE.monthlySpend=DATA.fireSettings.monthlySpend;
-    FIRE.expectedReturn=DATA.fireSettings.expectedReturn;
-    FIRE.monthlySaving=DATA.fireSettings.monthlySaving;
-  }
+  try{
+    const r=await fetch(FIREBASE_URL+'/pk-fire.json');
+    if(r.ok){
+      const d=await r.json();
+      if(d && typeof d.monthlySpend==='number'){
+        FIRE.monthlySpend=d.monthlySpend;
+        FIRE.expectedReturn=d.expectedReturn;
+        FIRE.monthlySaving=d.monthlySaving;
+        return;
+      }
+    }
+  }catch(e){console.warn('loadFire failed',e);}
 }
 
 const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
@@ -686,7 +697,7 @@ function bindFireEvents(){
       const outId={'fire-spend':'out-spend','fire-sav':'out-sav','fire-ret':'out-ret'}[id];
       const out=document.getElementById(outId);
       if(out)out.textContent=id==='fire-ret'?FIRE[key].toFixed(1)+'%':fmtKr(FIRE[key]);
-      saveFire();
+      saveFire(); // async, non-blocking
       updateInPlace();
     };
   });
