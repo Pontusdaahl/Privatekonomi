@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="sv">
-<head>
-<meta charset="utf-8">
+<!-- saved from url=(0086)file://bestnet.se/Shared/3041-Users/Pontus3663/Downloads/privatekonomi_firebase_2.html -->
+<html lang="sv"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privatekonomi Terminal</title>
 <style>
@@ -21,174 +21,992 @@
 </style>
 </head>
 <body>
-<div id="root">Laddar...</div>
-<script>
-function emptyData(){
-  return {transactions:[],assets:[],debts:[],budgets:{},fire:{currentAge:'27',expectedReturn:'7',inflation:'2',swr:'4',monthlySaving:null,currentCapital:null,targetAnnualSpend:null}};
-}
-let DATA=null,TAB='oversikt',TXFILTER='all',IO_OPEN=false,IO_MODE='export',IMPORT_TEXT='',MSG=null,SAVE_TIMER=null;
-let MONTH=(function(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
-let FORM={type:'expense',amount:'',category:'Bostad',date:MONTH+'-01',note:''};
-let ASSETFORM={name:'',value:'',category:'Aktier/fonder'};
-let DEBTFORM={name:'',value:''};
-const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
-const ASSET_CATS=['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
-const FIREBASE_URL='https://privatekonomi-6ca77-default-rtdb.europe-west1.firebasedatabase.app';
-const DB_PATH='/privatekonomi.json';
-async function loadData(){try{const r=await fetch(FIREBASE_URL+DB_PATH);if(r.ok){const d=await r.json();if(d)return d;}}catch(e){}try{const raw=localStorage.getItem('pk-v1');if(raw)return JSON.parse(raw);}catch(e){}return emptyData();}
-async function saveData(){try{localStorage.setItem('pk-v1',JSON.stringify(DATA));}catch(e){}clearTimeout(SAVE_TIMER);SAVE_TIMER=setTimeout(async()=>{try{await fetch(FIREBASE_URL+DB_PATH,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DATA)});}catch(e){}},800);}
-const fmt=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v||0))+' kr';
-const toNum=(x,d=0)=>{const n=Number(String(x==null?'':x).replace(/\s/g,'').replace(',','.'));return isFinite(n)?n:d;};
-function monthLabel(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('sv-SE',{month:'long',year:'numeric'});}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
-function derive(month){
-  const monthTx=DATA.transactions.filter(t=>t.date&&t.date.slice(0,7)===month);
-  const S=(arr,p)=>arr.filter(p).reduce((a,t)=>a+(Number(t.amount)||0),0);
-  const income=S(monthTx,t=>t.type==='income'),expense=S(monthTx,t=>t.type==='expense'),invested=S(monthTx,t=>t.type==='investment');
-  const saved=income-expense,savingsRate=income>0?(saved/income*100):0;
-  const totAssets=DATA.assets.reduce((a,x)=>a+toNum(x.value,0),0),totDebts=DATA.debts.reduce((a,x)=>a+toNum(x.value,0),0),netWorth=totAssets-totDebts;
-  const expByCat={};monthTx.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.category]=(expByCat[t.category]||0)+(Number(t.amount)||0);});
-  const year=(month||'').slice(0,4),yearTx=DATA.transactions.filter(t=>t.date&&t.date.slice(0,4)===year);
-  const yExpByCat={};yearTx.filter(t=>t.type==='expense').forEach(t=>{yExpByCat[t.category]=(yExpByCat[t.category]||0)+(Number(t.amount)||0);});
-  const allExpByCat={};DATA.transactions.filter(t=>t.type==='expense').forEach(t=>{allExpByCat[t.category]=(allExpByCat[t.category]||0)+(Number(t.amount)||0);});
-  const yIncome=S(yearTx,t=>t.type==='income'),yExpense=S(yearTx,t=>t.type==='expense'),yInvested=S(yearTx,t=>t.type==='investment'),ySaved=yIncome-yExpense,yRate=yIncome>0?(ySaved/yIncome*100):0;
-  const allIncome=S(DATA.transactions,t=>t.type==='income'),allExpense=S(DATA.transactions,t=>t.type==='expense'),allInvested=S(DATA.transactions,t=>t.type==='investment'),allSaved=allIncome-allExpense,allRate=allIncome>0?(allSaved/allIncome*100):0;
-  const allDates=DATA.transactions.map(t=>t.date).filter(Boolean).sort(),firstDate=allDates.length?allDates[0]:null;
-  return{income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,expByCat,year,yIncome,yExpense,yInvested,ySaved,yRate,yExpByCat,allIncome,allExpense,allInvested,allSaved,allRate,allExpByCat,firstDate,monthTxCount:monthTx.length};
-}
-function card(c,s=''){return`<div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;${s}">${c}</div>`;}
-function row(l,v,col){return`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">${l}</span><span style="font-size:15.3px;color:${col};">${v}</span></div>`;}
-function catBreakdown(e){const total=Object.values(e).reduce((a,v)=>a+v,0)||1,entries=Object.entries(e).sort((a,b)=>b[1]-a[1]);if(!entries.length)return`<div style="padding:10px 0;text-align:center;font-size:13px;color:#465058;">Inga utgifter</div>`;const cols=['#00e5a0','#2dd4ff','#ffb454','#ff5e7a','#a78bfa'];return entries.map(([cat,amt],i)=>{const col=cols[i%cols.length],pct=amt/total*100;return`<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;"><span style="font-size:14.8px;color:#d4ddd9;">${esc(cat)}</span><span style="display:flex;align-items:center;gap:8px;"><span style="font-size:14.2px;color:#cdd8d4;">${fmt(amt)}</span><span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:42px;text-align:right;">${Math.round(pct)}%</span></span></div><div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;"><div style="width:${Math.max(3,pct)}%;height:100%;background:${col};box-shadow:0 0 8px ${col};"></div></div></div>`;}).join('');}
-function tabBtn(key,label){const a=TAB===key;return`<button data-tab="${key}" style="padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;border:1px solid ${a?'rgba(0,229,160,.5)':'#1b2228'};background:${a?'linear-gradient(180deg,rgba(0,229,160,.15),rgba(0,229,160,.04))':'rgba(255,255,255,.012)'};color:${a?'#00e5a0':'#7c8893'};">${label}</button>`;}
-function render(){
-  const D=derive(MONTH);
-  document.getElementById('root').innerHTML=`
-  <div style="min-height:100vh;background:radial-gradient(1100px 560px at 80% -10%,rgba(45,212,255,.08),transparent 60%),radial-gradient(900px 480px at -8% 104%,rgba(0,229,160,.07),transparent 55%),#07090b;">
-  <div style="max-width:1180px;margin:0 auto;padding:20px;">
-  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(0,229,160,.2),rgba(45,212,255,.12));border:1px solid rgba(0,229,160,.38);box-shadow:0 0 24px rgba(0,229,160,.28);font-size:20px;color:#00e5a0;">◆</div>
-      <div><div style="font-weight:700;letter-spacing:.14em;font-size:17.7px;color:#eef4f1;">PRIVATEKONOMI</div>
-      <div style="display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.2em;color:#5d6b76;margin-top:2px;"><span style="width:7px;height:7px;border-radius:50%;background:#00e5a0;box-shadow:0 0 9px #00e5a0;animation:nwpulse 2.2s infinite;display:inline-block;"></span>TERMINAL · LIVE</div></div>
+<div id="root">
+  <div style="min-height:100vh;color:#e6edf3;background:radial-gradient(1100px 560px at 80% -10%, rgba(45,212,255,.08), transparent 60%), radial-gradient(900px 480px at -8% 104%, rgba(0,229,160,.07), transparent 55%), #07090b;">
+    <div style="max-width:1180px;margin:0 auto;padding:20px;">
+      <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(0,229,160,.2), rgba(45,212,255,.12));border:1px solid rgba(0,229,160,.38);box-shadow:0 0 24px rgba(0,229,160,.28);font-size:23.6px;color:#00e5a0;">◆</div>
+          <div>
+            <div style="font-weight:700;letter-spacing:.14em;font-size:17.7px;color:#eef4f1;">PRIVATEKONOMI</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:11.8px;letter-spacing:.2em;color:#5d6b76;margin-top:2px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:#00e5a0;box-shadow:0 0 9px #00e5a0;animation:nwpulse 2.2s infinite;display:inline-block;"></span>
+              TERMINAL · LIVE
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+          <div style="text-align:right;">
+            <div style="font-size:13px;letter-spacing:.18em;color:#5d6b76;">NETTOFÖRMÖGENHET</div>
+            <div style="margin-top:3px;font-weight:700;font-size:26px;color:#00e5a0">1&nbsp;826&nbsp;400 kr</div>
+          </div>
+          <button id="btn-openio" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.025);color:#aeb9c2;border:1px solid #222a32;border-radius:11px;padding:10px 15px;font-size:14.2px;cursor:pointer;">⇅ DATA</button>
+        </div>
+      </header>
+      <nav style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+        <button data-tab="oversikt" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
+    border:1px solid rgba(0,229,160,.5);
+    background:linear-gradient(180deg, rgba(0,229,160,.15), rgba(0,229,160,.04));
+    color:#00e5a0;">ÖVERSIKT</button><button data-tab="transaktioner" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
+    border:1px solid #1b2228;
+    background:rgba(255,255,255,.012);
+    color:#7c8893;">TRANSAKTIONER</button><button data-tab="formogenhet" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
+    border:1px solid #1b2228;
+    background:rgba(255,255,255,.012);
+    color:#7c8893;">FÖRMÖGENHET</button><button data-tab="mal" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
+    border:1px solid #1b2228;
+    background:rgba(255,255,255,.012);
+    color:#7c8893;">MÅL &amp; FIRE</button>
+      </nav>
+      <div id="content">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button data-month="-1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20.1px;cursor:pointer;">‹</button>
+      <div style="font-size:16.5px;letter-spacing:.06em;color:#dbe6ec;min-width:160px;text-align:center;text-transform:uppercase;font-weight:600;">juli 2026</div>
+      <button data-month="1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20.1px;cursor:pointer;">›</button>
     </div>
-    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-      <div style="text-align:right;"><div style="font-size:11px;letter-spacing:.18em;color:#5d6b76;">NETTOFÖRMÖGENHET</div><div style="margin-top:3px;font-weight:700;font-size:26px;color:${D.netWorth>=0?'#00e5a0':'#ff5e7a'}">${fmt(D.netWorth)}</div></div>
-      <button id="btn-openio" style="background:rgba(255,255,255,.025);color:#aeb9c2;border:1px solid #222a32;border-radius:11px;padding:10px 15px;font-size:14.2px;cursor:pointer;">⇅ DATA</button>
-    </div>
-  </header>
-  <nav style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">${tabBtn('oversikt','ÖVERSIKT')}${tabBtn('transaktioner','TRANSAKTIONER')}${tabBtn('formogenhet','FÖRMÖGENHET')}</nav>
-  <div id="content"></div>
-  </div></div>${IO_OPEN?renderModal():''}`;
-  document.getElementById('content').innerHTML=TAB==='oversikt'?renderOversikt(D):TAB==='transaktioner'?renderTx(D):renderFormogenhet(D);
-  bindEvents();
-}
-function renderOversikt(D){
-  const budgetCats=Array.from(new Set([...Object.keys(DATA.budgets||{}),...Object.keys(D.expByCat)]));
-  const budgetRows=budgetCats.length?budgetCats.map(c=>{const spent=D.expByCat[c]||0,limit=(DATA.budgets&&DATA.budgets[c])||0,pct=limit>0?Math.min(100,spent/limit*100):(spent>0?100:0),over=limit>0&&spent>limit,col=over?'#ff5e7a':(limit>0?'#00e5a0':'#39424b');return`<div style="margin-bottom:13px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;"><span style="font-size:15.3px;color:#d4ddd9;">${esc(c)}</span><span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">${fmt(spent)} / <input data-budget="${esc(c)}" value="${limit||''}" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;"></span></div><div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${col};box-shadow:0 0 10px ${col};border-radius:6px;"></div></div></div>`;}).join(''):`<div style="padding:20px 0;text-align:center;font-size:14.2px;color:#465058;">Lägg till transaktioner för att se budget</div>`;
-  const cols=['#00e5a0','#2dd4ff','#ffb454','#ff5e7a','#a78bfa'];
-  const top=Object.entries(D.expByCat).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([cat,amt],i)=>{const col=cols[i%cols.length],pct=amt/(D.expense||1)*100;return`<div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;"><span style="font-size:15.3px;font-weight:700;color:${col};width:20px;">${String(i+1).padStart(2,'0')}</span><div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;"><span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(cat)}</span><span style="font-size:14.2px;color:#cdd8d4;">${fmt(amt)}</span></div><div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;"><div style="width:${Math.max(3,pct)}%;height:100%;background:${col};box-shadow:0 0 8px ${col};"></div></div></div><span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">${Math.round(pct)}%</span></div>`;}).join('')||`<div style="padding:20px 0;text-align:center;font-size:14.2px;color:#465058;">Inga utgifter denna månad</div>`;
-  return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-    <div style="display:flex;align-items:center;gap:8px;"><button data-month="-1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20px;cursor:pointer;">‹</button><div style="font-size:16.5px;letter-spacing:.06em;color:#dbe6ec;min-width:160px;text-align:center;text-transform:uppercase;font-weight:600;">${monthLabel(MONTH)}</div><button data-month="1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20px;cursor:pointer;">›</button></div>
-    <div style="font-size:13px;color:#5d6b76;">${D.monthTxCount} poster denna månad</div></div>
+    <div style="font-size:13px;color:#5d6b76;">23 poster denna månad</div>
+  </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:14px;">
-    ${card(`<div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">INKOMSTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#00e5a0;">${fmt(D.income)}</div>`)}
-    ${card(`<div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">UTGIFTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#ff5e7a;">${fmt(D.expense)}</div>`)}
-    ${card(`<div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">INVESTERAT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#2dd4ff;">${fmt(D.invested)}</div>`)}
-    ${card(`<div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">SPARKVOT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:${D.savingsRate>=0?'#00e5a0':'#ff5e7a'};">${Math.round(D.savingsRate)}%</div><div style="font-size:11px;color:#5d6b76;margin-top:3px;">${fmt(D.saved)} sparat</div>`)}
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">INKOMSTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#00e5a0;">34&nbsp;598 kr</div></div>
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">UTGIFTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#ff5e7a;">14&nbsp;733 kr</div></div>
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">INVESTERAT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#2dd4ff;">1&nbsp;250 kr</div></div>
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">SPARKVOT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#00e5a0;">57%</div><div style="font-size:11.8px;color:#5d6b76;margin-top:3px;">19&nbsp;865 kr sparat</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px;">
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">MÅNADSBUDGET</div><div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">Bostad</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          3&nbsp;246 kr / <input data-budget="Bostad" value="6000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:54.1%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
+      </div>
+    </div><div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">Kläder</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          0 kr / <input data-budget="Kläder" value="1000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:0%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
+      </div>
+    </div><div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">Mat</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          40 kr / <input data-budget="Mat" value="4000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:1%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
+      </div>
+    </div><div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">Nöje</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          1&nbsp;918 kr / <input data-budget="Nöje" value="3000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:63.93333333333333%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
+      </div>
+    </div><div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">Transport</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          2&nbsp;884 kr / <input data-budget="Transport" value="4000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:72.1%;height:100%;background:#00e5a0;box-shadow:0 0 10px #00e5a0;border-radius:6px;"></div>
+      </div>
+    </div><div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">Övrigt</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          6&nbsp;645 kr / <input data-budget="Övrigt" value="2000" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:100%;height:100%;background:#ff5e7a;box-shadow:0 0 10px #ff5e7a;border-radius:6px;"></div>
+      </div>
+    </div></div>
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">UTGIFTER KATEGORI</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
+      <span style="font-size:15.3px;font-weight:700;color:#00e5a0;width:20px;">01</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Övrigt</span>
+          <span style="font-size:14.2px;color:#cdd8d4;">6&nbsp;645 kr</span>
+        </div>
+        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
+          <div style="width:45.102830380777846%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
+        </div>
+      </div>
+      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">45%</span>
+    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
+      <span style="font-size:15.3px;font-weight:700;color:#2dd4ff;width:20px;">02</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Bostad</span>
+          <span style="font-size:14.2px;color:#cdd8d4;">3&nbsp;246 kr</span>
+        </div>
+        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
+          <div style="width:22.0321726735899%;height:100%;background:#2dd4ff;box-shadow:0 0 8px #2dd4ff;"></div>
+        </div>
+      </div>
+      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">22%</span>
+    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
+      <span style="font-size:15.3px;font-weight:700;color:#ffb454;width:20px;">03</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Transport</span>
+          <span style="font-size:14.2px;color:#cdd8d4;">2&nbsp;884 kr</span>
+        </div>
+        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
+          <div style="width:19.575103509129164%;height:100%;background:#ffb454;box-shadow:0 0 8px #ffb454;"></div>
+        </div>
+      </div>
+      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">20%</span>
+    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
+      <span style="font-size:15.3px;font-weight:700;color:#ff5e7a;width:20px;">04</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Nöje</span>
+          <span style="font-size:14.2px;color:#cdd8d4;">1&nbsp;918 kr</span>
+        </div>
+        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
+          <div style="width:13.018394081314058%;height:100%;background:#ff5e7a;box-shadow:0 0 8px #ff5e7a;"></div>
+        </div>
+      </div>
+      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">13%</span>
+    </div><div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
+      <span style="font-size:15.3px;font-weight:700;color:#a78bfa;width:20px;">05</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Mat</span>
+          <span style="font-size:14.2px;color:#cdd8d4;">40 kr</span>
+        </div>
+        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
+          <div style="width:3%;height:100%;background:#a78bfa;box-shadow:0 0 8px #a78bfa;"></div>
+        </div>
+      </div>
+      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">0%</span>
+    </div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;">
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">HELÅR 2026</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Inkomster</span><span style="font-size:15.3px;color:#00e5a0;">250&nbsp;077 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Utgifter</span><span style="font-size:15.3px;color:#ff5e7a;">179&nbsp;204 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Investerat</span><span style="font-size:15.3px;color:#2dd4ff;">63&nbsp;480 kr</span></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">70&nbsp;873 kr · 28%</span></div>
+      <div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div>
+      <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>
+      <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Nöje</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">60&nbsp;552 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">34%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:33.789424343206626%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Bostad</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">34&nbsp;285 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">19%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:19.131827414566636%;height:100%;background:#2dd4ff;box-shadow:0 0 8px #2dd4ff;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Transport</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">32&nbsp;128 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">18%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:17.92817124617754%;height:100%;background:#ffb454;box-shadow:0 0 8px #ffb454;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Mat</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">24&nbsp;283 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">14%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:13.550478783955716%;height:100%;background:#ff5e7a;box-shadow:0 0 8px #ff5e7a;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Övrigt</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">22&nbsp;139 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">12%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:12.354076917925939%;height:100%;background:#a78bfa;box-shadow:0 0 8px #a78bfa;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Kläder</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">5&nbsp;817 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">3%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:3.246021294167541%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
+      </div>
+    </div></div>
+    <div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;"><div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">SEDAN START <span style="color:#5d6b76;font-weight:500;letter-spacing:.04em;">· 2026-01-01</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Inkomster</span><span style="font-size:15.3px;color:#00e5a0;">250&nbsp;077 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Utgifter</span><span style="font-size:15.3px;color:#ff5e7a;">179&nbsp;204 kr</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">Investerat</span><span style="font-size:15.3px;color:#2dd4ff;">63&nbsp;480 kr</span></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">70&nbsp;873 kr · 28%</span></div>
+      <div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div>
+      <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>
+      <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Nöje</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">60&nbsp;552 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">34%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:33.789424343206626%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Bostad</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">34&nbsp;285 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">19%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:19.131827414566636%;height:100%;background:#2dd4ff;box-shadow:0 0 8px #2dd4ff;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Transport</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">32&nbsp;128 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">18%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:17.92817124617754%;height:100%;background:#ffb454;box-shadow:0 0 8px #ffb454;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Mat</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">24&nbsp;283 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">14%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:13.550478783955716%;height:100%;background:#ff5e7a;box-shadow:0 0 8px #ff5e7a;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Övrigt</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">22&nbsp;139 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">12%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:12.354076917925939%;height:100%;background:#a78bfa;box-shadow:0 0 8px #a78bfa;"></div>
+      </div>
+    </div><div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">Kläder</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">5&nbsp;817 kr</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">3%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:3.246021294167541%;height:100%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div>
+      </div>
+    </div></div>
+  </div></div>
+    </div>
+  </div>
+  
+  </div>
+<script>
+
+function emptyData(){
+  return {
+    transactions: [],
+    assets: [],
+    debts: [],
+    budgets: {},
+    fire: { currentAge:'27', expectedReturn:'7', inflation:'2', swr:'4', monthlySaving:null, currentCapital:null, targetAnnualSpend:null },
+  };
+}
+let DATA = null;
+let TAB = 'oversikt';
+let MONTH = (function(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); })();
+let TXFILTER = 'all';
+let FORM = { type:'expense', amount:'', category:'Bostad', date:MONTH+'-01', note:'' };
+let ASSETFORM = { name:'', value:'', category:'Aktier/fonder' };
+let DEBTFORM = { name:'', value:'' };
+let IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null;
+let FIRE = { age:27, monthlySpend:29000, expectedReturn:7, monthlySaving:15000, bgUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg', bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg' };
+let FIRE_CHART = null;
+
+const DEFAULT_CATS = { expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'], income:['Lön','Övrigt'], investment:['Övrigt','Aktier','Fonder','Amortering'] };
+
+const FIREBASE_URL = 'https://privatekonomi-6ca77-default-rtdb.europe-west1.firebasedatabase.app';
+const DB_PATH = '/privatekonomi.json';
+let SAVE_TIMER = null;
+
+async function loadData(){
+  try{
+    const res = await fetch(FIREBASE_URL + DB_PATH);
+    if (res.ok){
+      const d = await res.json();
+      if (d) return d;
+    }
+  }catch(e){}
+  // fallback to localStorage if offline
+  try{
+    const raw = localStorage.getItem('privatekonomi-data-v1');
+    if (raw) return JSON.parse(raw);
+  }catch(e){}
+  return emptyData();
+}
+
+async function saveData(){
+  // save to localStorage immediately as backup
+  try{ localStorage.setItem('privatekonomi-data-v1', JSON.stringify(DATA)); }catch(e){}
+  // debounce Firebase writes (max 1 per second)
+  clearTimeout(SAVE_TIMER);
+  SAVE_TIMER = setTimeout(async ()=>{
+    try{
+      await fetch(FIREBASE_URL + DB_PATH, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(DATA)
+      });
+    }catch(e){ console.warn('Firebase sync failed, data saved locally', e); }
+  }, 800);
+}
+
+const fmt = v => new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v||0)) + ' kr';
+const toNum = (x,d=0) => { const n=Number(String(x==null?'':x).replace(/\s/g,'').replace(',','.')); return isFinite(n)?n:d; };
+function monthLabel(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m-1,1).toLocaleDateString('sv-SE',{month:'long',year:'numeric'}); }
+function calcAge(){ const b=new Date('1998-08-04'),n=new Date(); let a=n.getFullYear()-b.getFullYear(); if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--; return a; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function derive(month){
+  const monthTx = DATA.transactions.filter(t=>t.date && t.date.slice(0,7)===month);
+  const S = (arr,p) => arr.filter(p).reduce((a,t)=>a+(Number(t.amount)||0),0);
+  const income = S(monthTx,t=>t.type==='income');
+  const expense = S(monthTx,t=>t.type==='expense');
+  const invested = S(monthTx,t=>t.type==='investment');
+  const saved = income-expense;
+  const savingsRate = income>0 ? (saved/income*100) : 0;
+  const totAssets = DATA.assets.reduce((a,x)=>a+toNum(x.value,0),0);
+  const totDebts = DATA.debts.reduce((a,x)=>a+toNum(x.value,0),0);
+  const netWorth = totAssets-totDebts;
+  const expByCat = {};
+  monthTx.filter(t=>t.type==='expense').forEach(t=>{ expByCat[t.category]=(expByCat[t.category]||0)+(Number(t.amount)||0); });
+  const year=(month||'').slice(0,4);
+  const yearTx = DATA.transactions.filter(t=>t.date && t.date.slice(0,4)===year);
+  const yExpByCat = {};
+  yearTx.filter(t=>t.type==='expense').forEach(t=>{ yExpByCat[t.category]=(yExpByCat[t.category]||0)+(Number(t.amount)||0); });
+  const allExpByCat = {};
+  DATA.transactions.filter(t=>t.type==='expense').forEach(t=>{ allExpByCat[t.category]=(allExpByCat[t.category]||0)+(Number(t.amount)||0); });
+  const yIncome=S(yearTx,t=>t.type==='income'), yExpense=S(yearTx,t=>t.type==='expense'), yInvested=S(yearTx,t=>t.type==='investment');
+  const ySaved=yIncome-yExpense; const yRate = yIncome>0?(ySaved/yIncome*100):0;
+  const allIncome=S(DATA.transactions,t=>t.type==='income'), allExpense=S(DATA.transactions,t=>t.type==='expense'), allInvested=S(DATA.transactions,t=>t.type==='investment');
+  const allSaved=allIncome-allExpense; const allRate=allIncome>0?(allSaved/allIncome*100):0;
+  const allDates = DATA.transactions.map(t=>t.date).filter(Boolean).sort();
+  const firstDate = allDates.length ? allDates[0] : null;
+  return { income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,expByCat,
+    year,yIncome,yExpense,yInvested,ySaved,yRate,yearTxCount:yearTx.length,yExpByCat,
+    allIncome,allExpense,allInvested,allSaved,allRate,allTxCount:DATA.transactions.length, monthTxCount:monthTx.length, allExpByCat, firstDate };
+}
+
+function render(){
+  const root = document.getElementById('root');
+  const D = derive(MONTH);
+  root.innerHTML = `
+  <div style="min-height:100vh;color:#e6edf3;background:radial-gradient(1100px 560px at 80% -10%, rgba(45,212,255,.08), transparent 60%), radial-gradient(900px 480px at -8% 104%, rgba(0,229,160,.07), transparent 55%), #07090b;">
+    <div style="max-width:1180px;margin:0 auto;padding:20px;">
+      <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(0,229,160,.2), rgba(45,212,255,.12));border:1px solid rgba(0,229,160,.38);box-shadow:0 0 24px rgba(0,229,160,.28);font-size:23.6px;color:#00e5a0;">◆</div>
+          <div>
+            <div style="font-weight:700;letter-spacing:.14em;font-size:17.7px;color:#eef4f1;">PRIVATEKONOMI</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:11.8px;letter-spacing:.2em;color:#5d6b76;margin-top:2px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:#00e5a0;box-shadow:0 0 9px #00e5a0;animation:nwpulse 2.2s infinite;display:inline-block;"></span>
+              TERMINAL · LIVE
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+          <div style="text-align:right;">
+            <div style="font-size:13px;letter-spacing:.18em;color:#5d6b76;">NETTOFÖRMÖGENHET</div>
+            <div style="margin-top:3px;font-weight:700;font-size:26px;color:${D.netWorth>=0?'#00e5a0':'#ff5e7a'}">${fmt(D.netWorth)}</div>
+          </div>
+          <button id="btn-openio" style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.025);color:#aeb9c2;border:1px solid #222a32;border-radius:11px;padding:10px 15px;font-size:14.2px;cursor:pointer;">⇅ DATA</button>
+        </div>
+      </header>
+      <nav style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+        ${tabBtn('oversikt','ÖVERSIKT')}${tabBtn('transaktioner','TRANSAKTIONER')}${tabBtn('formogenhet','FÖRMÖGENHET')}${tabBtn('mal','MÅL & FIRE')}
+      </nav>
+      <div id="content"></div>
+    </div>
+  </div>
+  ${IO_OPEN ? renderModal() : ''}
+  `;
+  document.getElementById('content').innerHTML = TAB==='oversikt' ? renderOversikt(D) : TAB==='transaktioner' ? renderTx(D) : TAB==='mal' ? renderMal(D) : renderFormogenhet(D);
+  bindEvents();
+  if(TAB==='mal') { if(typeof bindFireEvents==='function') bindFireEvents(); }
+}
+
+function tabBtn(key,label){
+  const active = TAB===key;
+  return `<button data-tab="${key}" style="display:flex;align-items:center;gap:8px;padding:10px 17px;border-radius:11px;cursor:pointer;font-size:14.8px;font-weight:600;letter-spacing:.05em;
+    border:1px solid ${active?'rgba(0,229,160,.5)':'#1b2228'};
+    background:${active?'linear-gradient(180deg, rgba(0,229,160,.15), rgba(0,229,160,.04))':'rgba(255,255,255,.012)'};
+    color:${active?'#00e5a0':'#7c8893'};">${label}</button>`;
+}
+function card(content,style=''){ return `<div style="background:linear-gradient(180deg,#0f1418,#0b0e11);border:1px solid #1a2128;border-radius:16px;padding:20px;${style}">${content}</div>`; }
+function row(label,val,col){
+  return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #141a20;"><span style="font-size:16.5px;color:#8b97a3;">${label}</span><span style="font-size:15.3px;color:${col};">${val}</span></div>`;
+}
+function catBreakdown(expByCat){
+  const total = Object.values(expByCat).reduce((a,v)=>a+v,0) || 1;
+  const entries = Object.entries(expByCat).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length) return `<div style="padding:10px 0;text-align:center;font-size:13px;color:#465058;">Inga utgifter</div>`;
+  const rankCols=['#00e5a0','#2dd4ff','#ffb454','#ff5e7a','#a78bfa'];
+  return entries.map(([cat,amt],i)=>{
+    const col=rankCols[i%rankCols.length]; const pct=amt/total*100;
+    return `<div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+        <span style="font-size:14.8px;color:#d4ddd9;">${esc(cat)}</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:14.2px;color:#cdd8d4;">${fmt(amt)}</span>
+          <span style="font-size:15.3px;font-weight:600;color:#aeb9c2;width:38px;text-align:right;">${Math.round(pct)}%</span>
+        </span>
+      </div>
+      <div style="height:5px;border-radius:5px;background:#10161b;overflow:hidden;">
+        <div style="width:${Math.max(3,pct)}%;height:100%;background:${col};box-shadow:0 0 8px ${col};"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderOversikt(D){
+  const budgetCats = Array.from(new Set([...Object.keys(DATA.budgets||{}), ...Object.keys(D.expByCat)]));
+  const budgetRows = budgetCats.length ? budgetCats.map(c=>{
+    const spent = D.expByCat[c]||0; const limit = (DATA.budgets&&DATA.budgets[c])||0;
+    const pct = limit>0 ? Math.min(100, spent/limit*100) : (spent>0?100:0);
+    const over = limit>0 && spent>limit;
+    const col = over?'#ff5e7a':(limit>0?'#00e5a0':'#39424b');
+    return `<div style="margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+        <span style="font-size:15.3px;color:#d4ddd9;">${esc(c)}</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14.2px;color:#aeb9c2;">
+          ${fmt(spent)} / <input data-budget="${esc(c)}" value="${limit||''}" placeholder="tak" inputmode="numeric" style="width:70px;background:#0a0d10;border:1px solid #20272f;border-radius:8px;padding:4px 7px;color:#dbe6ec;font-size:13.6px;text-align:right;">
+        </span>
+      </div>
+      <div style="height:7px;border-radius:6px;background:#10161b;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${col};box-shadow:0 0 10px ${col};border-radius:6px;"></div>
+      </div>
+    </div>`;
+  }).join('') : `<div style="padding:20px 0;text-align:center;font-size:14.2px;color:#465058;">Lägg till transaktioner för att se budget</div>`;
+
+  const totalExp = D.expense||1;
+  const rankCols=['#00e5a0','#2dd4ff','#ffb454','#ff5e7a','#a78bfa'];
+  const top = Object.entries(D.expByCat).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([cat,amt],i)=>{
+    const col=rankCols[i%rankCols.length]; const pct=amt/totalExp*100;
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:11px;">
+      <span style="font-size:15.3px;font-weight:700;color:${col};width:20px;">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;">
+          <span style="font-size:15.3px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(cat)}</span>
+          <span style="font-size:14.2px;color:#cdd8d4;">${fmt(amt)}</span>
+        </div>
+        <div style="height:6px;border-radius:5px;background:#10161b;overflow:hidden;">
+          <div style="width:${Math.max(3,pct)}%;height:100%;background:${col};box-shadow:0 0 8px ${col};"></div>
+        </div>
+      </div>
+      <span style="font-size:17.7px;font-weight:600;color:#aeb9c2;width:46px;text-align:right;">${Math.round(pct)}%</span>
+    </div>`;
+  }).join('') || `<div style="padding:20px 0;text-align:center;font-size:14.2px;color:#465058;">Inga utgifter denna månad</div>`;
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button data-month="-1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20.1px;cursor:pointer;">‹</button>
+      <div style="font-size:16.5px;letter-spacing:.06em;color:#dbe6ec;min-width:160px;text-align:center;text-transform:uppercase;font-weight:600;">${monthLabel(MONTH)}</div>
+      <button data-month="1" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #222a32;color:#aeb9c2;font-size:20.1px;cursor:pointer;">›</button>
+    </div>
+    <div style="font-size:13px;color:#5d6b76;">${D.monthTxCount} poster denna månad</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:14px;">
+    ${card(`<div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">INKOMSTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#00e5a0;">${fmt(D.income)}</div>`)}
+    ${card(`<div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">UTGIFTER</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#ff5e7a;">${fmt(D.expense)}</div>`)}
+    ${card(`<div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">INVESTERAT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:#2dd4ff;">${fmt(D.invested)}</div>`)}
+    ${card(`<div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;">SPARKVOT</div><div style="margin-top:9px;font-weight:700;font-size:26px;color:${D.savingsRate>=0?'#00e5a0':'#ff5e7a'};">${Math.round(D.savingsRate)}%</div><div style="font-size:11.8px;color:#5d6b76;margin-top:3px;">${fmt(D.saved)} sparat</div>`)}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px;">
     ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">MÅNADSBUDGET</div>${budgetRows}`)}
     ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">UTGIFTER KATEGORI</div>${top}`)}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;">
-    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">HELÅR ${D.year}</div>${row('Inkomster',fmt(D.yIncome),'#00e5a0')}${row('Utgifter',fmt(D.yExpense),'#ff5e7a')}${row('Investerat',fmt(D.yInvested),'#2dd4ff')}<div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">${fmt(D.ySaved)} · ${Math.round(D.yRate)}%</span></div><div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div><div style="font-size:11px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>${catBreakdown(D.yExpByCat)}`)}
-    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">SEDAN START${D.firstDate?` <span style="color:#5d6b76;font-weight:500;">· ${esc(D.firstDate)}</span>`:''}</div>${row('Inkomster',fmt(D.allIncome),'#00e5a0')}${row('Utgifter',fmt(D.allExpense),'#ff5e7a')}${row('Investerat',fmt(D.allInvested),'#2dd4ff')}<div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">${fmt(D.allSaved)} · ${Math.round(D.allRate)}%</span></div><div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div><div style="font-size:11px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>${catBreakdown(D.allExpByCat)}`)}
+    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">HELÅR ${D.year}</div>
+      ${row('Inkomster',fmt(D.yIncome),'#00e5a0')}${row('Utgifter',fmt(D.yExpense),'#ff5e7a')}${row('Investerat',fmt(D.yInvested),'#2dd4ff')}
+      <div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">${fmt(D.ySaved)} · ${Math.round(D.yRate)}%</span></div>
+      <div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div>
+      <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>
+      ${catBreakdown(D.yExpByCat)}`)}
+    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:12px;">SEDAN START${D.firstDate ? ` <span style="color:#5d6b76;font-weight:500;letter-spacing:.04em;">· ${esc(D.firstDate)}</span>` : ''}</div>
+      ${row('Inkomster',fmt(D.allIncome),'#00e5a0')}${row('Utgifter',fmt(D.allExpense),'#ff5e7a')}${row('Investerat',fmt(D.allInvested),'#2dd4ff')}
+      <div style="display:flex;justify-content:space-between;padding:10px 0 2px;"><span style="font-size:16.5px;color:#d4ddd9;font-weight:600;">Sparat</span><span style="font-size:16.5px;color:#eef4f1;font-weight:700;">${fmt(D.allSaved)} · ${Math.round(D.allRate)}%</span></div>
+      <div style="height:1px;background:#1a2128;margin:14px 0 4px;"></div>
+      <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;">UTGIFTER PER KATEGORI</div>
+      ${catBreakdown(D.allExpByCat)}`)}
   </div>`;
 }
+
 function renderTx(D){
-  let rows=DATA.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(TXFILTER!=='all')rows=rows.filter(t=>t.type===TXFILTER);
-  const tcol={income:'#00e5a0',expense:'#ff5e7a',investment:'#2dd4ff'},tlbl={income:'IN',expense:'UT',investment:'INV'},tsign={income:'+',expense:'−',investment:'→ '};
-  const txRows=rows.map(t=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #141a20;"><span style="font-size:11px;font-weight:700;padding:4px 7px;border-radius:6px;color:${tcol[t.type]};background:${tcol[t.type]}14;border:1px solid ${tcol[t.type]}33;min-width:34px;text-align:center;">${tlbl[t.type]}</span><div style="flex:1;min-width:0;"><div style="font-size:15.9px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.category)}</div><div style="font-size:12.4px;color:#5d6b76;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.date)}${t.note?' · '+esc(t.note):''}</div></div><span style="font-size:15.3px;font-weight:600;color:${tcol[t.type]};white-space:nowrap;">${tsign[t.type]}${fmt(t.amount)}</span><button data-deltx="${t.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;">×</button></div>`).join('')||`<div style="padding:30px 0;text-align:center;font-size:14.2px;color:#465058;">Inga poster ännu</div>`;
-  const filters=[['all','ALLA'],['income','IN'],['expense','UT'],['investment','INV']].map(([k,l])=>{const a=TXFILTER===k;return`<button data-txf="${k}" style="padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;border:1px solid ${a?'rgba(45,212,255,.45)':'#1b2228'};color:${a?'#2dd4ff':'#7c8893'};background:${a?'rgba(45,212,255,.1)':'rgba(255,255,255,.012)'};">${l}</button>`;}).join('');
-  const typeBtns=['expense','income','investment'].map(k=>{const meta={expense:['UTGIFT','#ff5e7a'],income:['INKOMST','#00e5a0'],investment:['INVEST.','#2dd4ff']},a=FORM.type===k,[lbl,col]=meta[k];return`<button data-type="${k}" style="flex:1;padding:9px 4px;border-radius:10px;cursor:pointer;font-size:11.8px;font-weight:700;border:1px solid ${a?col:'#20272f'};color:${a?col:'#7c8893'};background:${a?col+'1a':'rgba(255,255,255,.012)'};">${lbl}</button>`;}).join('');
-  const catOpts=(DEFAULT_CATS[FORM.type]||['Övrigt']).map(c=>`<option value="${esc(c)}" ${c===FORM.category?'selected':''}>${esc(c)}</option>`).join('');
-  return`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start;">
-    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:16px;">NY POST</div>
+  let rows = DATA.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if (TXFILTER!=='all') rows = rows.filter(t=>t.type===TXFILTER);
+  const tcol={income:'#00e5a0',expense:'#ff5e7a',investment:'#2dd4ff'};
+  const tlbl={income:'IN',expense:'UT',investment:'INV'};
+  const tsign={income:'+',expense:'−',investment:'→ '};
+  const txRows = rows.map(t=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #141a20;">
+      <span style="font-size:11.2px;font-weight:700;padding:4px 7px;border-radius:6px;color:${tcol[t.type]};background:${tcol[t.type]}14;border:1px solid ${tcol[t.type]}33;min-width:34px;text-align:center;">${tlbl[t.type]}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15.9px;color:#d4ddd9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.category)}</div>
+        <div style="font-size:12.4px;color:#5d6b76;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.date)}${t.note?' · '+esc(t.note):''}</div>
+      </div>
+      <span style="font-size:15.3px;font-weight:600;color:${tcol[t.type]};white-space:nowrap;">${tsign[t.type]}${fmt(t.amount)}</span>
+      <button data-deltx="${t.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;">×</button>
+    </div>`).join('') || `<div style="padding:30px 0;text-align:center;font-size:14.2px;color:#465058;">Inga poster ännu — lägg till din första transaktion</div>`;
+
+  const filters=[['all','ALLA'],['income','IN'],['expense','UT'],['investment','INV']].map(([k,l])=>{
+    const a=TXFILTER===k;
+    return `<button data-txf="${k}" style="padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;border:1px solid ${a?'rgba(45,212,255,.45)':'#1b2228'};color:${a?'#2dd4ff':'#7c8893'};background:${a?'rgba(45,212,255,.1)':'rgba(255,255,255,.012)'};">${l}</button>`;
+  }).join('');
+
+  const typeBtns = ['expense','income','investment'].map(k=>{
+    const meta={expense:['UTGIFT','#ff5e7a'],income:['INKOMST','#00e5a0'],investment:['INVEST.','#2dd4ff']};
+    const active=FORM.type===k; const [lbl,col]=meta[k];
+    return `<button data-type="${k}" style="flex:1;padding:9px 4px;border-radius:10px;cursor:pointer;font-size:11.8px;font-weight:700;border:1px solid ${active?col:'#20272f'};color:${active?col:'#7c8893'};background:${active?col+'1a':'rgba(255,255,255,.012)'};">${lbl}</button>`;
+  }).join('');
+
+  const catOpts = (DEFAULT_CATS[FORM.type]||['Övrigt']).map(c=>`<option value="${esc(c)}" ${c===FORM.category?'selected':''}>${esc(c)}</option>`).join('');
+
+  return `
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start;">
+    ${card(`
+      <div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:16px;">NY POST</div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">${typeBtns}</div>
-      <div style="font-size:11px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">BELOPP</div>
-      <input id="f-amount" value="${esc(FORM.amount)}" placeholder="0" inputmode="decimal" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:12px 14px;color:#eef4f1;font-size:20px;font-weight:600;margin-bottom:14px;">
+      <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">BELOPP</div>
+      <input id="f-amount" value="${esc(FORM.amount)}" placeholder="0" inputmode="decimal" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:12px 14px;color:#eef4f1;font-size:20.1px;font-weight:600;margin-bottom:14px;">
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-direction:column;">
-        <div><div style="font-size:11px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">KATEGORI</div><select id="f-category" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:11px;color:#dbe6ec;font-size:15.3px;">${catOpts}</select></div>
-        <div><div style="font-size:11px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">DATUM</div>
-          <div style="position:relative;width:100%;"><input id="f-date" type="date" value="${esc(FORM.date)}" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:10px 42px 10px 10px;color:#dbe6ec;font-size:15.3px;-webkit-appearance:none;appearance:none;">
-          <svg viewBox="0 0 24 24" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);width:18px;height:18px;pointer-events:none;" fill="none" stroke="#e6edf3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+        <div style="flex:1;">
+          <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">KATEGORI</div>
+          <select id="f-category" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:11px;color:#dbe6ec;font-size:15.3px;">${catOpts}</select>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">DATUM</div>
+          <div style="position:relative;width:100%;">
+            <input id="f-date" type="date" value="${esc(FORM.date)}" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:10px 42px 10px 10px;color:#dbe6ec;font-size:15.3px;-webkit-appearance:none;appearance:none;">
+            <svg viewBox="0 0 24 24" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);width:18px;height:18px;pointer-events:none;flex-shrink:0;" fill="none" stroke="#e6edf3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+              <line x1="16" y1="3" x2="16" y2="7"></line>
+              <line x1="8" y1="3" x2="8" y2="7"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
         </div>
       </div>
-      <div style="font-size:11px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">ANTECKNING</div>
+      <div style="font-size:11.2px;letter-spacing:.14em;color:#5d6b76;margin-bottom:6px;">ANTECKNING</div>
       <input id="f-note" value="${esc(FORM.note)}" placeholder="valfritt..." style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:11px;padding:11px 14px;color:#dbe6ec;font-size:16.5px;margin-bottom:16px;">
-      <button id="btn-add" style="width:100%;background:linear-gradient(180deg,#00e5a0,#04b384);color:#04130d;border:none;border-radius:12px;padding:13px;font-weight:700;cursor:pointer;font-size:15.3px;">+ LÄGG TILL POST</button>`)}
-    ${card(`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">${filters}</div><div style="max-height:540px;overflow-y:auto;">${txRows}</div>`)}
+      <button id="btn-add" style="width:100%;background:linear-gradient(180deg,#00e5a0,#04b384);color:#04130d;border:none;border-radius:12px;padding:13px;font-weight:700;cursor:pointer;font-size:15.3px;">+ LÄGG TILL POST</button>
+    `)}
+    ${card(`
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">${filters}</div>
+      <div style="display:flex;flex-direction:column;max-height:540px;overflow-y:auto;">${txRows}</div>
+    `)}
   </div>`;
 }
+
+const ASSET_CATS = ['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
+
 function renderFormogenhet(D){
   const nwTotal=(D.totAssets+D.totDebts)||1;
-  const catOptsFor=cur=>ASSET_CATS.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
-  const grouped={};DATA.assets.forEach(a=>{const c=a.category||ASSET_CATS[0];(grouped[c]=grouped[c]||[]).push(a);});
-  const assetRows=DATA.assets.length?ASSET_CATS.filter(c=>grouped[c]&&grouped[c].length).map(c=>{const items=grouped[c].slice().sort((x,y)=>(x.name||'').localeCompare(y.name||'','sv'));return`<div style="margin-top:14px;"><div style="font-size:11px;letter-spacing:.12em;color:#5d6b76;margin-bottom:4px;text-transform:uppercase;">${esc(c)}</div>${items.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #141a20;"><input data-asset-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;"><input data-asset-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#00e5a0;font-size:15.3px;text-align:right;"><button data-delasset="${a.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;flex-shrink:0;">×</button></div>`).join('')}</div>`;}).join(''):`<div style="padding:18px 0;text-align:center;font-size:13.6px;color:#465058;">Lägg till en tillgång ovan</div>`;
-  const debtRows=DATA.debts.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #141a20;"><input data-debt-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;"><input data-debt-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#ff5e7a;font-size:15.3px;text-align:right;"><button data-deldebt="${a.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;flex-shrink:0;">×</button></div>`).join('')||`<div style="padding:18px 0;text-align:center;font-size:13.6px;color:#465058;">Inga skulder registrerade</div>`;
-  return`${card(`<div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;margin-bottom:8px;">NETTOFÖRMÖGENHET</div><div style="font-weight:700;font-size:42px;color:${D.netWorth>=0?'#00e5a0':'#ff5e7a'};margin-bottom:16px;">${fmt(D.netWorth)}</div><div style="display:flex;height:12px;border-radius:8px;overflow:hidden;background:#10161b;margin-bottom:8px;"><div style="width:${D.totAssets/nwTotal*100}%;background:#00e5a0;"></div><div style="width:${D.totDebts/nwTotal*100}%;background:#ff5e7a;"></div></div><div style="display:flex;justify-content:space-between;"><span style="color:#00e5a0;font-size:15.3px;">▸ Tillgångar ${fmt(D.totAssets)}</span><span style="color:#ff5e7a;font-size:15.3px;">Skulder ${fmt(D.totDebts)} ◂</span></div>`,'margin-bottom:14px;')}
+  const catOptsFor = (cur) => ASSET_CATS.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
+  const grouped = {};
+  DATA.assets.forEach(a=>{ const c=a.category||ASSET_CATS[0]; (grouped[c]=grouped[c]||[]).push(a); });
+  const assetRows = DATA.assets.length ? ASSET_CATS.filter(c=>grouped[c]&&grouped[c].length).map(c=>{
+    const items = grouped[c].slice().sort((x,y)=>(x.name||'').localeCompare(y.name||'','sv'));
+    const rows = items.map(a=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #141a20;">
+        <input data-asset-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;">
+        <input data-asset-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#00e5a0;font-size:15.3px;text-align:right;">
+        <button data-delasset="${a.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;flex-shrink:0;">×</button>
+      </div>`).join('');
+    return `<div style="margin-top:14px;">
+      <div style="font-size:11px;letter-spacing:.12em;color:#5d6b76;margin-bottom:4px;text-transform:uppercase;">${esc(c)}</div>
+      ${rows}
+    </div>`;
+  }).join('') : `<div style="padding:18px 0;text-align:center;font-size:13.6px;color:#465058;">Lägg till en tillgång ovan</div>`;
+  const debtRows = DATA.debts.map(a=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #141a20;">
+      <input data-debt-name="${a.id}" value="${esc(a.name)}" style="flex:1;min-width:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#d4ddd9;font-size:15.9px;">
+      <input data-debt-value="${a.id}" value="${esc(toNum(a.value,0))}" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #181f26;border-radius:8px;padding:8px 10px;color:#ff5e7a;font-size:15.3px;text-align:right;">
+      <button data-deldebt="${a.id}" style="background:none;border:none;color:#3a444c;cursor:pointer;font-size:18.9px;flex-shrink:0;">×</button>
+    </div>`).join('') || `<div style="padding:18px 0;text-align:center;font-size:13.6px;color:#465058;">Inga skulder registrerade</div>`;
+
+  return `
+  ${card(`
+    <div style="font-size:13px;letter-spacing:.16em;color:#5d6b76;margin-bottom:8px;">NETTOFÖRMÖGENHET</div>
+    <div style="font-weight:700;font-size:42.5px;color:${D.netWorth>=0?'#00e5a0':'#ff5e7a'};margin-bottom:16px;">${fmt(D.netWorth)}</div>
+    <div style="display:flex;height:12px;border-radius:8px;overflow:hidden;background:#10161b;margin-bottom:8px;">
+      <div style="width:${D.totAssets/nwTotal*100}%;background:#00e5a0;"></div>
+      <div style="width:${D.totDebts/nwTotal*100}%;background:#ff5e7a;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13.6px;">
+      <span style="color:#00e5a0;font-size:15.3px;">▸ Tillgångar ${fmt(D.totAssets)}</span>
+      <span style="color:#ff5e7a;font-size:15.3px;">Skulder ${fmt(D.totDebts)} ◂</span>
+    </div>
+  `,'margin-bottom:14px;')}
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">
-    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">TILLGÅNGAR</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input id="a-name" value="${esc(ASSETFORM.name)}" placeholder="t.ex. Sparkonto..." style="flex:1;min-width:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;"><input id="a-value" value="${esc(ASSETFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;"><button id="btn-addasset" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.4);color:#00e5a0;border-radius:10px;width:40px;flex-shrink:0;font-size:21px;cursor:pointer;">+</button></div><select id="a-category" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 10px;color:#dbe6ec;font-size:13.6px;margin-bottom:14px;">${catOptsFor(ASSETFORM.category)}</select>${assetRows}`)}
-    ${card(`<div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">SKULDER</div><div style="display:flex;gap:8px;margin-bottom:14px;"><input id="d-name" value="${esc(DEBTFORM.name)}" placeholder="t.ex. bolån..." style="flex:1;min-width:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;"><input id="d-value" value="${esc(DEBTFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;"><button id="btn-adddebt" style="background:rgba(255,94,122,.12);border:1px solid rgba(255,94,122,.4);color:#ff5e7a;border-radius:10px;width:40px;flex-shrink:0;font-size:21px;cursor:pointer;">+</button></div>${debtRows}`)}
+    ${card(`
+      <div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">TILLGÅNGAR</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="a-name" value="${esc(ASSETFORM.name)}" placeholder="t.ex. Sparkonto, bostad..." style="flex:1;min-width:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;">
+        <input id="a-value" value="${esc(ASSETFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;">
+        <button id="btn-addasset" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.4);color:#00e5a0;border-radius:10px;width:40px;flex-shrink:0;font-size:21.2px;cursor:pointer;">+</button>
+      </div>
+      <select id="a-category" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 10px;color:#dbe6ec;font-size:13.6px;margin-bottom:14px;">${catOptsFor(ASSETFORM.category)}</select>
+      ${assetRows}
+    `)}
+    ${card(`
+      <div style="font-size:14.2px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">SKULDER</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input id="d-name" value="${esc(DEBTFORM.name)}" placeholder="t.ex. bolån..." style="flex:1;min-width:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.9px;">
+        <input id="d-value" value="${esc(DEBTFORM.value)}" placeholder="kr" inputmode="numeric" style="width:142px;flex-shrink:0;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:10px;color:#dbe6ec;font-size:15.3px;text-align:right;">
+        <button id="btn-adddebt" style="background:rgba(255,94,122,.12);border:1px solid rgba(255,94,122,.4);color:#ff5e7a;border-radius:10px;width:40px;flex-shrink:0;font-size:21.2px;cursor:pointer;">+</button>
+      </div>
+      ${debtRows}
+    `)}
   </div>`;
 }
+
+function renderMal(D){
+  const nw = D.netWorth;
+  const fireTarget = (FIRE.monthlySpend*12)/0.04;
+  const pct = Math.min(100, nw/fireTarget*100);
+  const ret = FIRE.expectedReturn/100;
+  const sav = FIRE.monthlySaving;
+  function yrsTo(target){ if(nw>=target) return 0; let w=nw,y=0; while(w<target&&y<100){w=w*(1+ret)+sav*12;y++;} return y<100?y:null; }
+  const yFire = yrsTo(fireTarget);
+  const withdraw3 = nw*0.03, withdraw4 = nw*0.04;
+  const bgUrl = FIRE.bgUrl || '';
+  const bgMobUrl = FIRE.bgMobUrl || bgUrl;
+  const bgStyle = bgUrl ? `background:linear-gradient(rgba(7,9,11,.80),rgba(7,9,11,.80)),url('${bgUrl}') center/cover no-repeat` : 'background:#07090b';
+
+  const growthData = [];
+  let w2 = nw;
+  for(let y=0;y<=20;y++){ growthData.push({y:Math.round(w2),t:fireTarget}); w2=w2*(1+ret)+sav*12; }
+
+  return `
+  <div id="fire-hero-bg" style="${bgStyle};border-radius:16px;padding:20px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+      <div>
+        <div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">FRIHETSMÅL</div>
+        <div style="font-size:28px;font-weight:700;color:#00e5a0;margin-top:4px;">${fmt(fireTarget)}</div>
+        <div style="font-size:13px;color:#5d6b76;margin-top:2px;">${fmt(FIRE.monthlySpend)}/mån · 4%-regeln</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;letter-spacing:.16em;color:#5d6b76;">NULÄGE</div>
+        <div style="font-size:28px;font-weight:700;color:${nw>=0?'#2dd4ff':'#ff5e7a'};margin-top:4px;">${fmt(nw)}</div>
+        <div style="font-size:13px;color:#5d6b76;margin-top:2px;">Ålder ${calcAge()} år (f. 1998)</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:13px;color:#aeb9c2;">Framsteg mot FIRE</span>
+        <span style="font-size:22px;font-weight:700;color:${pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff'};">${pct.toFixed(1)}%</span>
+      </div>
+      <div style="height:16px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2dd4ff,#00e5a0);border-radius:10px;transition:width .4s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#5d6b76;">
+        <span>${fmt(nw)} uppnått</span>
+        <span>${fmt(Math.max(0,fireTarget-nw))} kvar</span>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07);">
+      <div style="font-size:11px;color:#5d6b76;margin-bottom:6px;">${yFire!==null?`Uppskattad tid till FIRE: ca ${yFire} år (vid ${FIRE.expectedReturn}% avkastning och ${fmt(sav)}/mån)`:'Justera sparande för att nå målet'}</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;">
+    ${card(`<div style="font-size:10px;letter-spacing:.14em;color:#5d6b76;margin-bottom:8px;">3%-REGELN (KONSERVATIV)</div><div style="font-size:22px;font-weight:700;color:#00e5a0;">${fmt(withdraw3/12)}<span style="font-size:13px;font-weight:400;color:#5d6b76;">/mån</span></div><div style="font-size:12px;color:#5d6b76;margin-top:4px;">${fmt(withdraw3)}/år</div>`)}
+    ${card(`<div style="font-size:10px;letter-spacing:.14em;color:#5d6b76;margin-bottom:8px;">4%-REGELN (STANDARD)</div><div style="font-size:22px;font-weight:700;color:#2dd4ff;">${fmt(withdraw4/12)}<span style="font-size:13px;font-weight:400;color:#5d6b76;">/mån</span></div><div style="font-size:12px;color:#5d6b76;margin-top:4px;">${fmt(withdraw4)}/år</div>`)}
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px;">
+    ${card(`
+      <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:16px;">INSTÄLLNINGAR</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Månadsutgift (kr)</div>
+            <input type="number" id="fire-spend" min="1000" max="500000" step="1000" value="${FIRE.monthlySpend}" inputmode="numeric" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:11px 12px;color:#00e5a0;font-size:15px;font-weight:600;">
+          </div>
+          <div>
+            <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Månadsparande (kr)</div>
+            <input type="number" id="fire-sav" min="0" max="200000" step="500" value="${FIRE.monthlySaving}" inputmode="numeric" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:11px 12px;color:#2dd4ff;font-size:15px;font-weight:600;">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Förväntad avkastning per år (%)</div>
+          <input type="number" id="fire-ret" min="0" max="20" step="0.5" value="${FIRE.expectedReturn}" inputmode="decimal" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:11px 12px;color:#dbe6ec;font-size:15px;font-weight:600;">
+        </div>
+        <div>
+          <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Bakgrundsbild desktop (URL)</div>
+          <input id="fire-bg" value="${FIRE.bgUrl}" placeholder="https://pontusdaahl.github.io/Privatekonomi/bg-desktop.jpg" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 12px;color:#dbe6ec;font-size:12px;">
+        </div>
+        <div>
+          <div style="font-size:12px;color:#8b97a3;margin-bottom:6px;">Bakgrundsbild mobil (URL)</div>
+          <input id="fire-bg-mob" value="${FIRE.bgMobUrl||''}" placeholder="https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg" style="width:100%;background:#0a0d10;border:1px solid #20272f;border-radius:10px;padding:9px 12px;color:#dbe6ec;font-size:12px;">
+        </div>
+        ${bgUrl ? `<style>#fire-hero-bg{background:linear-gradient(rgba(7,9,11,.80),rgba(7,9,11,.80)),url('${bgUrl}') center/cover no-repeat}@media(max-width:600px){#fire-hero-bg{background:linear-gradient(rgba(7,9,11,.80),rgba(7,9,11,.80)),url('${bgMobUrl||bgUrl}') center/cover no-repeat}}</style>` : ''}
+      </div>
+    `)}
+    ${card(`
+      <div style="font-size:12px;letter-spacing:.1em;color:#cdd8d4;font-weight:600;margin-bottom:14px;">TILLVÄXTPROGNOS (20 ÅR)</div>
+      <div style="position:relative;height:220px;"><canvas id="fire-chart" role="img" aria-label="Linjediagram för förmögenhetstillväxt mot FIRE-mål">Förmögenhetsprognos 20 år.</canvas></div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#00e5a0;display:inline-block;"></span><span style="color:#8b97a3;">Förmögenhet</span></span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:#2dd4ff;display:inline-block;"></span><span style="color:#8b97a3;">FIRE-mål</span></span>
+      </div>
+    `)}
+  </div>`;
+}
+
+function drawFireChart(D){
+  const c = document.getElementById('fire-chart');
+  if(!c) return;
+  const nw = D.netWorth;
+  const ret = FIRE.expectedReturn/100;
+  const sav = FIRE.monthlySaving;
+  const target = (FIRE.monthlySpend*12)/0.04;
+  const labels=[], vals1=[], vals2=[];
+  let w=nw;
+  for(let y=0;y<=20;y++){
+    labels.push(y===0?'Nu':y+'å');
+    vals1.push(Math.round(w));
+    vals2.push(Math.round(target));
+    w=w*(1+ret)+sav*12;
+  }
+  if(FIRE_CHART){ FIRE_CHART.destroy(); FIRE_CHART=null; }
+  FIRE_CHART = new Chart(c,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Förmögenhet',data:vals1,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',borderWidth:2,pointRadius:2,fill:true,tension:.3},
+      {label:'FIRE-mål',data:vals2,borderColor:'#2dd4ff',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(ctx.raw)+' kr'}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5d6b76',font:{size:10},maxTicksLimit:6}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5d6b76',font:{size:10},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'k':v}}
+      }
+    }
+  });
+}
+
 function renderModal(){
-  const exportText=esc(JSON.stringify(DATA,null,2));
-  return`<div id="io-backdrop" style="position:fixed;inset:0;z-index:50;background:rgba(4,6,8,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;"><div id="io-modal" style="width:min(640px,100%);max-height:88vh;overflow-y:auto;background:linear-gradient(180deg,#11161b,#0b0e11);border:1px solid #222a32;border-radius:18px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div style="font-size:15.3px;letter-spacing:.1em;color:#eef4f1;font-weight:700;">DATA · IMPORT / EXPORT</div><button id="btn-closeio" style="background:none;border:none;color:#5d6b76;font-size:26px;cursor:pointer;">×</button></div>
-    <div style="display:flex;gap:8px;margin-bottom:18px;"><button id="btn-ioexport" style="flex:1;padding:11px;border-radius:10px;cursor:pointer;font-size:14.2px;font-weight:700;border:1px solid ${IO_MODE==='export'?'#00e5a0':'#20272f'};color:${IO_MODE==='export'?'#00e5a0':'#7c8893'};background:${IO_MODE==='export'?'rgba(0,229,160,.1)':'rgba(255,255,255,.012)'};">↑ EXPORTERA</button><button id="btn-ioimport" style="flex:1;padding:11px;border-radius:10px;cursor:pointer;font-size:14.2px;font-weight:700;border:1px solid ${IO_MODE==='import'?'#2dd4ff':'#20272f'};color:${IO_MODE==='import'?'#2dd4ff':'#7c8893'};background:${IO_MODE==='import'?'rgba(45,212,255,.1)':'rgba(255,255,255,.012)'};">↓ IMPORTERA</button></div>
-    ${IO_MODE==='export'?`<div style="font-size:11px;letter-spacing:.1em;color:#5d6b76;margin-bottom:8px;">DIN DATA (JSON)</div><textarea readonly style="width:100%;height:190px;background:#07090b;border:1px solid #20272f;border-radius:11px;padding:13px;color:#9fd8c6;font-size:13px;line-height:1.5;resize:vertical;">${exportText}</textarea><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button id="btn-copyjson" style="flex:1;min-width:130px;background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.4);color:#00e5a0;border-radius:10px;padding:11px;font-size:14.2px;cursor:pointer;">⧉ Kopiera JSON</button><button id="btn-downloadjson" style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid #222a32;color:#aeb9c2;border-radius:10px;padding:11px;font-size:14.2px;cursor:pointer;">⤓ Ladda ner .json</button></div>`:`<div style="font-size:11px;letter-spacing:.1em;color:#5d6b76;margin-bottom:8px;">KLISTRA IN JSON</div><textarea id="import-text" placeholder="Klistra in JSON-data här..." style="width:100%;height:190px;background:#07090b;border:1px solid #20272f;border-radius:11px;padding:13px;color:#dbe6ec;font-size:13px;line-height:1.5;resize:vertical;">${esc(IMPORT_TEXT)}</textarea><button id="btn-doimport" style="width:100%;margin-top:12px;background:linear-gradient(180deg,#2dd4ff,#1ba7d4);color:#04141a;border:none;border-radius:11px;padding:13px;font-weight:700;cursor:pointer;font-size:15.3px;">↓ IMPORTERA &amp; ERSÄTT</button>`}
-    ${MSG?`<div style="margin-top:14px;padding:11px 14px;border-radius:10px;font-size:13.6px;background:${MSG.ok?'rgba(0,229,160,.1)':'rgba(255,94,122,.1)'};border:1px solid ${MSG.ok?'rgba(0,229,160,.4)':'rgba(255,94,122,.4)'};color:${MSG.ok?'#00e5a0':'#ff5e7a'};">${esc(MSG.text)}</div>`:''}
-  </div></div>`;
+  const exportText = esc(JSON.stringify(DATA, null, 2));
+  const schemaText = esc('{\n  "transactions": [\n    { "type": "income|expense|investment",\n      "category": "Lön", "amount": 30000,\n      "date": "2026-06-25", "note": "" }\n  ],\n  "assets": [ { "name": "Sparkonto", "value": 90000 } ],\n  "debts":  [ { "name": "Bolån", "value": 1500000 } ],\n  "budgets": { "Mat": 5000, "Boende": 12000 },\n  "fire": { "currentAge": 30, "expectedReturn": 7, "inflation": 2, "swr": 4 }\n}');
+  return `
+  <div id="io-backdrop" style="position:fixed;inset:0;z-index:50;background:rgba(4,6,8,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;">
+    <div id="io-modal" style="width:min(640px,100%);max-height:88vh;overflow-y:auto;background:linear-gradient(180deg,#11161b,#0b0e11);border:1px solid #222a32;border-radius:18px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div style="font-size:15.3px;letter-spacing:.1em;color:#eef4f1;font-weight:700;">DATA · IMPORT / EXPORT</div>
+        <button id="btn-closeio" style="background:none;border:none;color:#5d6b76;font-size:26px;cursor:pointer;">×</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:18px;">
+        <button id="btn-ioexport" style="flex:1;padding:11px;border-radius:10px;cursor:pointer;font-size:14.2px;font-weight:700;border:1px solid ${IO_MODE==='export'?'#00e5a0':'#20272f'};color:${IO_MODE==='export'?'#00e5a0':'#7c8893'};background:${IO_MODE==='export'?'rgba(0,229,160,.1)':'rgba(255,255,255,.012)'};">↑ EXPORTERA</button>
+        <button id="btn-ioimport" style="flex:1;padding:11px;border-radius:10px;cursor:pointer;font-size:14.2px;font-weight:700;border:1px solid ${IO_MODE==='import'?'#2dd4ff':'#20272f'};color:${IO_MODE==='import'?'#2dd4ff':'#7c8893'};background:${IO_MODE==='import'?'rgba(45,212,255,.1)':'rgba(255,255,255,.012)'};">↓ IMPORTERA</button>
+      </div>
+      ${IO_MODE==='export' ? `
+        <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;margin-bottom:8px;">DIN DATA (JSON) — klistra in i ditt Claude-Project</div>
+        <textarea readonly style="width:100%;height:190px;background:#07090b;border:1px solid #20272f;border-radius:11px;padding:13px;color:#9fd8c6;font-size:13px;line-height:1.5;resize:vertical;">${exportText}</textarea>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button id="btn-copyjson" style="flex:1;min-width:130px;background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.4);color:#00e5a0;border-radius:10px;padding:11px;font-size:14.2px;cursor:pointer;">⧉ Kopiera JSON</button>
+          <button id="btn-downloadjson" style="flex:1;min-width:130px;background:rgba(255,255,255,.03);border:1px solid #222a32;color:#aeb9c2;border-radius:10px;padding:11px;font-size:14.2px;cursor:pointer;">⤓ Ladda ner .json</button>
+        </div>
+      ` : `
+        <div style="font-size:11.8px;letter-spacing:.1em;color:#5d6b76;margin-bottom:8px;">KLISTRA IN JSON</div>
+        <textarea id="import-text" placeholder="Klistra in JSON-data här..." style="width:100%;height:190px;background:#07090b;border:1px solid #20272f;border-radius:11px;padding:13px;color:#dbe6ec;font-size:13px;line-height:1.5;resize:vertical;">${esc(IMPORT_TEXT)}</textarea>
+        <button id="btn-doimport" style="width:100%;margin-top:12px;background:linear-gradient(180deg,#2dd4ff,#1ba7d4);color:#04141a;border:none;border-radius:11px;padding:13px;font-weight:700;cursor:pointer;font-size:15.3px;">↓ IMPORTERA &amp; ERSÄTT</button>
+        <details style="margin-top:14px;">
+          <summary style="font-size:13px;color:#5d6b76;cursor:pointer;">Visa förväntat format</summary>
+          <pre style="margin-top:10px;background:#07090b;border:1px solid #1a2128;border-radius:10px;padding:13px;color:#7d8a93;font-size:12.4px;line-height:1.5;overflow-x:auto;white-space:pre-wrap;">${schemaText}</pre>
+        </details>
+      `}
+      ${MSG ? `<div style="margin-top:14px;padding:11px 14px;border-radius:10px;font-size:13.6px;background:${MSG.ok?'rgba(0,229,160,.1)':'rgba(255,94,122,.1)'};border:1px solid ${MSG.ok?'rgba(0,229,160,.4)':'rgba(255,94,122,.4)'};color:${MSG.ok?'#00e5a0':'#ff5e7a'};">${esc(MSG.text)}</div>` : ''}
+    </div>
+  </div>`;
 }
+
 function bindEvents(){
-  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;if(TAB==='transaktioner')FORM.date=todayStr();render();});
-  document.querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{const[y,m]=MONTH.split('-').map(Number),d=new Date(y,m-1+Number(b.dataset.month),1);MONTH=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');render();});
-  document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{FORM.type=b.dataset.type;FORM.category=(DEFAULT_CATS[FORM.type]||['Övrigt'])[0];render();});
-  document.querySelectorAll('[data-txf]').forEach(b=>b.onclick=()=>{TXFILTER=b.dataset.txf;render();});
-  document.querySelectorAll('[data-deltx]').forEach(b=>b.onclick=async()=>{DATA.transactions=DATA.transactions.filter(t=>t.id!==b.dataset.deltx);await saveData();render();});
-  document.querySelectorAll('[data-delasset]').forEach(b=>b.onclick=async()=>{DATA.assets=DATA.assets.filter(t=>t.id!==b.dataset.delasset);await saveData();render();});
-  document.querySelectorAll('[data-deldebt]').forEach(b=>b.onclick=async()=>{DATA.debts=DATA.debts.filter(t=>t.id!==b.dataset.deldebt);await saveData();render();});
-  document.querySelectorAll('[data-budget]').forEach(inp=>inp.onchange=async(e)=>{const cat=inp.dataset.budget,v=toNum(e.target.value,0);DATA.budgets=DATA.budgets||{};if(!v)delete DATA.budgets[cat];else DATA.budgets[cat]=v;await saveData();render();});
-  const fa=document.getElementById('f-amount');if(fa)fa.oninput=e=>FORM.amount=e.target.value;
-  const fc=document.getElementById('f-category');if(fc)fc.onchange=e=>FORM.category=e.target.value;
-  const fd=document.getElementById('f-date');if(fd)fd.oninput=e=>FORM.date=e.target.value;
-  const fn=document.getElementById('f-note');if(fn)fn.oninput=e=>FORM.note=e.target.value;
-  const btnAdd=document.getElementById('btn-add');if(btnAdd)btnAdd.onclick=async()=>{const amt=toNum(FORM.amount,0);if(!amt||amt<=0)return;DATA.transactions.unshift({id:'tx'+Date.now(),type:FORM.type,category:FORM.category,amount:Math.abs(amt),date:FORM.date,note:(FORM.note||'').trim()});await saveData();FORM.amount='';FORM.note='';render();};
-  const an=document.getElementById('a-name');if(an)an.oninput=e=>ASSETFORM.name=e.target.value;
-  const av=document.getElementById('a-value');if(av)av.oninput=e=>ASSETFORM.value=e.target.value;
-  const ac=document.getElementById('a-category');if(ac)ac.onchange=e=>ASSETFORM.category=e.target.value;
-  const btnA=document.getElementById('btn-addasset');if(btnA)btnA.onclick=async()=>{const v=toNum(ASSETFORM.value,0);if(!ASSETFORM.name.trim()||!v)return;DATA.assets.push({id:'as'+Date.now(),name:ASSETFORM.name.trim(),value:v,category:ASSETFORM.category||ASSET_CATS[0]});await saveData();ASSETFORM={name:'',value:'',category:ASSETFORM.category};render();};
-  document.querySelectorAll('[data-asset-name]').forEach(inp=>inp.onchange=async(e)=>{const it=DATA.assets.find(x=>x.id===inp.dataset.assetName);if(it){it.name=e.target.value.trim()||it.name;await saveData();render();}});
-  document.querySelectorAll('[data-asset-value]').forEach(inp=>inp.onchange=async(e)=>{const it=DATA.assets.find(x=>x.id===inp.dataset.assetValue);if(it){it.value=toNum(e.target.value,it.value);await saveData();render();}});
-  const dn=document.getElementById('d-name');if(dn)dn.oninput=e=>DEBTFORM.name=e.target.value;
-  const dv=document.getElementById('d-value');if(dv)dv.oninput=e=>DEBTFORM.value=e.target.value;
-  const btnD=document.getElementById('btn-adddebt');if(btnD)btnD.onclick=async()=>{const v=toNum(DEBTFORM.value,0);if(!DEBTFORM.name.trim()||!v)return;DATA.debts.push({id:'de'+Date.now(),name:DEBTFORM.name.trim(),value:v});await saveData();DEBTFORM={name:'',value:''};render();};
-  document.querySelectorAll('[data-debt-name]').forEach(inp=>inp.onchange=async(e)=>{const it=DATA.debts.find(x=>x.id===inp.dataset.debtName);if(it){it.name=e.target.value.trim()||it.name;await saveData();render();}});
-  document.querySelectorAll('[data-debt-value]').forEach(inp=>inp.onchange=async(e)=>{const it=DATA.debts.find(x=>x.id===inp.dataset.debtValue);if(it){it.value=toNum(e.target.value,it.value);await saveData();render();}});
-  const btnOpenIO=document.getElementById('btn-openio');if(btnOpenIO)btnOpenIO.onclick=()=>{IO_OPEN=true;IO_MODE='export';MSG=null;render();};
-  const backdrop=document.getElementById('io-backdrop');if(backdrop)backdrop.onclick=e=>{if(e.target.id==='io-backdrop'){IO_OPEN=false;MSG=null;render();}};
-  const btnCloseIO=document.getElementById('btn-closeio');if(btnCloseIO)btnCloseIO.onclick=()=>{IO_OPEN=false;MSG=null;render();};
-  const btnIoExport=document.getElementById('btn-ioexport');if(btnIoExport)btnIoExport.onclick=()=>{IO_MODE='export';MSG=null;render();};
-  const btnIoImport=document.getElementById('btn-ioimport');if(btnIoImport)btnIoImport.onclick=()=>{IO_MODE='import';MSG=null;render();};
-  const btnCopy=document.getElementById('btn-copyjson');if(btnCopy)btnCopy.onclick=()=>{try{navigator.clipboard.writeText(JSON.stringify(DATA,null,2));MSG={ok:true,text:'JSON kopierad ✓'};}catch(e){MSG={ok:false,text:'Kunde inte kopiera'};}render();};
-  const btnDownload=document.getElementById('btn-downloadjson');if(btnDownload)btnDownload.onclick=()=>{try{const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='privatekonomi.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){}};
-  const importTextEl=document.getElementById('import-text');if(importTextEl)importTextEl.oninput=e=>IMPORT_TEXT=e.target.value;
-  const btnDoImport=document.getElementById('btn-doimport');if(btnDoImport)btnDoImport.onclick=async()=>{try{const parsed=JSON.parse(IMPORT_TEXT);DATA={transactions:Array.isArray(parsed.transactions)?parsed.transactions:[],assets:Array.isArray(parsed.assets)?parsed.assets:[],debts:Array.isArray(parsed.debts)?parsed.debts:[],budgets:(parsed.budgets&&typeof parsed.budgets==='object')?parsed.budgets:{},fire:{...emptyData().fire,...(parsed.fire||{})}};await saveData();IMPORT_TEXT='';MSG={ok:true,text:'Data importerad ✓ ('+DATA.transactions.length+' poster)'};}catch(e){MSG={ok:false,text:'Kunde inte tolka JSON: '+e.message};}render();};
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
+    TAB=b.dataset.tab;
+    if (TAB==='transaktioner') { const t=new Date(); FORM.date = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
+    render();
+  });
+  document.querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{
+    const [y,m]=MONTH.split('-').map(Number);
+    const d=new Date(y,m-1+Number(b.dataset.month),1);
+    MONTH = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    render();
+  });
+  document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{ FORM.type=b.dataset.type; FORM.category=(DEFAULT_CATS[FORM.type]||['Övrigt'])[0]; render(); });
+  document.querySelectorAll('[data-txf]').forEach(b=>b.onclick=()=>{ TXFILTER=b.dataset.txf; render(); });
+  document.querySelectorAll('[data-deltx]').forEach(b=>b.onclick=async()=>{ DATA.transactions=DATA.transactions.filter(t=>t.id!==b.dataset.deltx); await saveData(); render(); });
+  document.querySelectorAll('[data-delasset]').forEach(b=>b.onclick=async()=>{ DATA.assets=DATA.assets.filter(t=>t.id!==b.dataset.delasset); await saveData(); render(); });
+  document.querySelectorAll('[data-deldebt]').forEach(b=>b.onclick=async()=>{ DATA.debts=DATA.debts.filter(t=>t.id!==b.dataset.deldebt); await saveData(); render(); });
+  document.querySelectorAll('[data-budget]').forEach(inp=>inp.onchange=async(e)=>{
+    const cat=inp.dataset.budget; const v=toNum(e.target.value,0);
+    DATA.budgets = DATA.budgets||{};
+    if(!v) delete DATA.budgets[cat]; else DATA.budgets[cat]=v;
+    await saveData(); render();
+  });
+
+  const fa=document.getElementById('f-amount'); if(fa) fa.oninput=e=>FORM.amount=e.target.value;
+  const fc=document.getElementById('f-category'); if(fc) fc.onchange=e=>FORM.category=e.target.value;
+  const fd=document.getElementById('f-date'); if(fd) fd.oninput=e=>FORM.date=e.target.value;
+  const fn=document.getElementById('f-note'); if(fn) fn.oninput=e=>FORM.note=e.target.value;
+  const btnAdd=document.getElementById('btn-add'); if(btnAdd) btnAdd.onclick=async()=>{
+    const amt=toNum(FORM.amount,0);
+    if(!amt||amt<=0) return;
+    DATA.transactions.unshift({ id:'tx'+Date.now(), type:FORM.type, category:FORM.category, amount:Math.abs(amt), date:FORM.date, note:(FORM.note||'').trim() });
+    await saveData();
+    FORM.amount=''; FORM.note='';
+    render();
+  };
+
+  const an=document.getElementById('a-name'); if(an) an.oninput=e=>ASSETFORM.name=e.target.value;
+  const av=document.getElementById('a-value'); if(av) av.oninput=e=>ASSETFORM.value=e.target.value;
+  const ac=document.getElementById('a-category'); if(ac) ac.onchange=e=>ASSETFORM.category=e.target.value;
+  const btnA=document.getElementById('btn-addasset'); if(btnA) btnA.onclick=async()=>{
+    const v=toNum(ASSETFORM.value,0); if(!ASSETFORM.name.trim()||!v) return;
+    DATA.assets.push({ id:'as'+Date.now(), name:ASSETFORM.name.trim(), value:v, category:ASSETFORM.category||ASSET_CATS[0] });
+    await saveData(); ASSETFORM={name:'',value:'',category:ASSETFORM.category}; render();
+  };
+  document.querySelectorAll('[data-asset-name]').forEach(inp=>inp.onchange=async(e)=>{
+    const it=DATA.assets.find(x=>x.id===inp.dataset.assetName); if(it){ it.name=e.target.value.trim()||it.name; await saveData(); render(); }
+  });
+  document.querySelectorAll('[data-asset-value]').forEach(inp=>inp.onchange=async(e)=>{
+    const it=DATA.assets.find(x=>x.id===inp.dataset.assetValue); if(it){ it.value=toNum(e.target.value,it.value); await saveData(); render(); }
+  });
+
+  const dn=document.getElementById('d-name'); if(dn) dn.oninput=e=>DEBTFORM.name=e.target.value;
+  const dv=document.getElementById('d-value'); if(dv) dv.oninput=e=>DEBTFORM.value=e.target.value;
+  const btnD=document.getElementById('btn-adddebt'); if(btnD) btnD.onclick=async()=>{
+    const v=toNum(DEBTFORM.value,0); if(!DEBTFORM.name.trim()||!v) return;
+    DATA.debts.push({ id:'de'+Date.now(), name:DEBTFORM.name.trim(), value:v });
+    await saveData(); DEBTFORM={name:'',value:''}; render();
+  };
+  document.querySelectorAll('[data-debt-name]').forEach(inp=>inp.onchange=async(e)=>{
+    const it=DATA.debts.find(x=>x.id===inp.dataset.debtName); if(it){ it.name=e.target.value.trim()||it.name; await saveData(); render(); }
+  });
+  document.querySelectorAll('[data-debt-value]').forEach(inp=>inp.onchange=async(e)=>{
+    const it=DATA.debts.find(x=>x.id===inp.dataset.debtValue); if(it){ it.value=toNum(e.target.value,it.value); await saveData(); render(); }
+  });
+
+  const btnOpenIO = document.getElementById('btn-openio'); if(btnOpenIO) btnOpenIO.onclick=()=>{ IO_OPEN=true; IO_MODE='export'; MSG=null; render(); };
+  const backdrop = document.getElementById('io-backdrop'); if(backdrop) backdrop.onclick=(e)=>{ if(e.target.id==='io-backdrop'){ IO_OPEN=false; MSG=null; render(); } };
+  const btnCloseIO = document.getElementById('btn-closeio'); if(btnCloseIO) btnCloseIO.onclick=()=>{ IO_OPEN=false; MSG=null; render(); };
+  const btnIoExport = document.getElementById('btn-ioexport'); if(btnIoExport) btnIoExport.onclick=()=>{ IO_MODE='export'; MSG=null; render(); };
+  const btnIoImport = document.getElementById('btn-ioimport'); if(btnIoImport) btnIoImport.onclick=()=>{ IO_MODE='import'; MSG=null; render(); };
+  const btnCopy = document.getElementById('btn-copyjson'); if(btnCopy) btnCopy.onclick=()=>{
+    try{ navigator.clipboard.writeText(JSON.stringify(DATA,null,2)); MSG={ok:true,text:'JSON kopierad ✓'}; }catch(e){ MSG={ok:false,text:'Kunde inte kopiera'}; } render();
+  };
+  const btnDownload = document.getElementById('btn-downloadjson'); if(btnDownload) btnDownload.onclick=()=>{
+    try{
+      const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='privatekonomi.json'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(e){}
+  };
+  const importTextEl = document.getElementById('import-text'); if(importTextEl) importTextEl.oninput=e=>IMPORT_TEXT=e.target.value;
+  const btnDoImport = document.getElementById('btn-doimport'); if(btnDoImport) btnDoImport.onclick=async()=>{
+    try{
+      const parsed = JSON.parse(IMPORT_TEXT);
+      DATA = {
+        transactions: Array.isArray(parsed.transactions)?parsed.transactions:[],
+        assets: Array.isArray(parsed.assets)?parsed.assets:[],
+        debts: Array.isArray(parsed.debts)?parsed.debts:[],
+        budgets: (parsed.budgets&&typeof parsed.budgets==='object')?parsed.budgets:{},
+        fire: { ...emptyData().fire, ...(parsed.fire||{}) },
+      };
+      await saveData();
+      IMPORT_TEXT=''; MSG={ok:true,text:'Data importerad ✓ ('+DATA.transactions.length+' poster)'};
+    }catch(e){ MSG={ok:false,text:'Kunde inte tolka JSON: '+e.message}; }
+    render();
+  };
 }
-(async function init(){DATA=await loadData();if(TAB==='transaktioner')FORM.date=todayStr();render();})();
+
+(async function init(){
+  DATA = await loadData();
+  if (TAB==='transaktioner'){ const t=new Date(); FORM.date = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
+  render();
+})();
 </script>
-</body>
-</html>
+<script src="./Index_files/chart.umd.js.nedladdning"></script>
+<script>
+function bindFireEvents(){
+  const D = derive(MONTH);
+  const sl = (id, key, outId, fmt2) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.oninput = e => {
+      FIRE[key] = parseFloat(e.target.value);
+      const out = document.getElementById(outId);
+      if(out) out.textContent = fmt2 ? fmt2(FIRE[key]) : FIRE[key];
+      document.getElementById('content').innerHTML = renderMal(derive(MONTH));
+      bindFireEvents();
+      drawFireChart(derive(MONTH));
+    };
+  };
+  sl('fire-spend','monthlySpend','fire-spend-out', v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v))+' kr');
+  const bg=document.getElementById('fire-bg'); if(bg) bg.onchange=e=>{FIRE.bgUrl=e.target.value.trim(); refreshMal();};
+  const bgm=document.getElementById('fire-bg-mob'); if(bgm) bgm.onchange=e=>{FIRE.bgMobUrl=e.target.value.trim(); refreshMal();};
+  drawFireChart(D);
+}
+</script>
+
+
+</body></html>
