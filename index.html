@@ -204,9 +204,19 @@ const FIRE_DEFAULTS={monthlySpend:29000,expectedReturn:7,monthlySaving:15000,
   bgMobUrl:'https://pontusdaahl.github.io/Privatekonomi/bg-mobile.jpg'};
 let FIRE=Object.assign({},FIRE_DEFAULTS);
 async function saveFire(){
-  const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
+  // lightweight save on slider move — full save via SPARA button
+  const D=derive(MONTH);
+  const d={
+    currentAge: calcAge(),
+    expectedReturn: Number(FIRE.expectedReturn)||7,
+    inflation: 2,
+    swr: 4,
+    monthlySaving: Number(FIRE.monthlySaving)||0,
+    targetAnnualSpend: Number(FIRE.monthlySpend)*12||0,
+    currentCapital: Number(D.netWorth)||0
+  };
   try{
-    await fetch(FIREBASE_URL+'/pk-fire.json',{
+    await fetch(FIREBASE_URL+'/privatekonomi/fire.json',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(d)
@@ -218,32 +228,42 @@ async function doSaveFire(){
   const status=document.getElementById('fire-save-status');
   if(btn)btn.textContent='Sparar...';
   if(status){status.textContent='';status.style.color='';}
-  const d={monthlySpend:FIRE.monthlySpend,expectedReturn:FIRE.expectedReturn,monthlySaving:FIRE.monthlySaving};
+  const D=derive(MONTH);
+  const d={
+    currentAge: calcAge(),
+    expectedReturn: Number(FIRE.expectedReturn) || 7,
+    inflation: 2,
+    swr: 4,
+    monthlySaving: Number(FIRE.monthlySaving) || 0,
+    targetAnnualSpend: Number(FIRE.monthlySpend) * 12 || 0,
+    currentCapital: Number(D.netWorth) || 0
+  };
   try{
-    const r=await fetch(FIREBASE_URL+'/pk-fire.json',{
+    const r=await fetch(FIREBASE_URL+'/privatekonomi/fire.json',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(d)
     });
     if(r.ok){
-      if(status){status.textContent='✓ Sparat till Firebase!';status.style.color='#00e5a0';}
+      if(status){status.textContent='✓ Sparat!';status.style.color='#00e5a0';}
+      setTimeout(()=>{if(status)status.textContent='';},3000);
     } else {
-      if(status){status.textContent='✗ Firebase svarade: '+r.status;status.style.color='#ff5e7a';}
+      if(status){status.textContent='✗ Firebase: '+r.status;status.style.color='#ff5e7a';}
     }
   }catch(e){
-    if(status){status.textContent='✗ Fel: '+e.message;status.style.color='#ff5e7a';}
+    if(status){status.textContent='✗ '+e.message;status.style.color='#ff5e7a';}
   }
   if(btn)btn.textContent='SPARA';
 }
 async function loadFire(){
   try{
-    const r=await fetch(FIREBASE_URL+'/pk-fire.json');
+    const r=await fetch(FIREBASE_URL+'/privatekonomi/fire.json');
     if(r.ok){
       const d=await r.json();
-      if(d && typeof d.monthlySpend==='number'){
-        FIRE.monthlySpend=d.monthlySpend;
+      if(d && typeof d.expectedReturn==='number'){
         FIRE.expectedReturn=d.expectedReturn;
-        FIRE.monthlySaving=d.monthlySaving;
+        if(typeof d.monthlySaving==='number') FIRE.monthlySaving=d.monthlySaving;
+        if(typeof d.targetAnnualSpend==='number') FIRE.monthlySpend=Math.round(d.targetAnnualSpend/12);
         return;
       }
     }
