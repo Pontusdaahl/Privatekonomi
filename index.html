@@ -213,7 +213,7 @@ async function saveFire(){
     swr: 4,
     monthlySaving: Number(FIRE.monthlySaving)||0,
     targetAnnualSpend: Number(FIRE.monthlySpend)*12||0,
-    currentCapital: Number(D.netWorth)||0
+    currentCapital: Number(D.fireCapital)||0
   };
   try{
     await fetch(FIREBASE_URL+'/privatekonomi/fire.json',{
@@ -236,7 +236,7 @@ async function doSaveFire(){
     swr: 4,
     monthlySaving: Number(FIRE.monthlySaving) || 0,
     targetAnnualSpend: Number(FIRE.monthlySpend) * 12 || 0,
-    currentCapital: Number(D.netWorth) || 0
+    currentCapital: Number(D.fireCapital) || 0
   };
   try{
     const r=await fetch(FIREBASE_URL+'/privatekonomi/fire.json',{
@@ -272,6 +272,7 @@ async function loadFire(){
 
 const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
 const ASSET_CATS=['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
+const FIRE_CATS=['Aktier/fonder','Sparande']; // endast likvida tillgångar räknas mot FIRE
 const FIREBASE_URL='https://privatekonomi-6ca77-default-rtdb.europe-west1.firebasedatabase.app';
 const DB_PATH='/privatekonomi.json';
 
@@ -319,6 +320,7 @@ function derive(month){
   const totAssets=DATA.assets.reduce((a,x)=>a+toNum(x.value,0),0);
   const totDebts=DATA.debts.reduce((a,x)=>a+toNum(x.value,0),0);
   const netWorth=totAssets-totDebts;
+  const fireCapital=DATA.assets.filter(x=>FIRE_CATS.includes(x.category||ASSET_CATS[0])).reduce((a,x)=>a+toNum(x.value,0),0);
   const expByCat={};monthTx.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.category]=(expByCat[t.category]||0)+(Number(t.amount)||0);});
   const year=(month||'').slice(0,4);
   const yearTx=DATA.transactions.filter(t=>t.date&&t.date.slice(0,4)===year);
@@ -330,7 +332,7 @@ function derive(month){
   const allSaved=allIncome-allExpense,allRate=allIncome>0?(allSaved/allIncome*100):0;
   const allDates=DATA.transactions.map(t=>t.date).filter(Boolean).sort();
   const firstDate=allDates.length?allDates[0]:null;
-  return{income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,expByCat,
+  return{income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,fireCapital,expByCat,
     year,yIncome,yExpense,yInvested,ySaved,yRate,yExpByCat,
     allIncome,allExpense,allInvested,allSaved,allRate,allExpByCat,firstDate,monthTxCount:monthTx.length};
 }
@@ -592,7 +594,7 @@ function renderFormogenhet(D){
 
 
 function renderMal(D){
-  const nw=D.netWorth;
+  const nw=D.fireCapital;
   const target=(FIRE.monthlySpend*12)/0.04;
   const pct=Math.min(100,nw/target*100);
   const ret=FIRE.expectedReturn/100,sav=FIRE.monthlySaving;
@@ -683,7 +685,7 @@ function renderMal(D){
 
 function drawFireChart(D){
   const c=document.getElementById('fire-chart');if(!c)return;
-  const nw=D.netWorth,ret=FIRE.expectedReturn/100,sav=FIRE.monthlySaving;
+  const nw=D.fireCapital,ret=FIRE.expectedReturn/100,sav=FIRE.monthlySaving;
   const target=(FIRE.monthlySpend*12)/0.04;
   const age=calcAge();
   const labels=[],v1=[],v2=[];let w=nw;
@@ -713,7 +715,7 @@ function drawFireChart(D){
 function bindFireEvents(){
   const fmtKr=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(Math.round(v))+' kr';
   function updateInPlace(){
-    const nw=derive(MONTH).netWorth;
+    const nw=derive(MONTH).fireCapital;
     const target=(FIRE.monthlySpend*12)/0.04;
     const pct=Math.min(100,nw/target*100);
     const pctCol=pct>=100?'#00e5a0':pct>=50?'#ffb454':'#2dd4ff';
