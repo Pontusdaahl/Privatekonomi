@@ -499,6 +499,18 @@ function renderTx(D){
   const filters=[['all','Alla'],['income','Inkomster'],['expense','Utgifter']].map(([k,l])=>
     `<button class="btn ${TXFILTER===k?'on':''}" data-txf="${k}" style="padding:6px 12px;font-size:15px;">${l}</button>`).join('');
 
+  const topExp = DATA.transactions.filter(t=>t.type==='expense'&&(t.date||'').slice(0,4)===D.year)
+    .sort((x,y)=>toNum(y.amount,0)-toNum(x.amount,0)).slice(0,5);
+  const topRows = topExp.map((t,i)=>`
+    <div class="item-row" style="padding:10px 0;gap:14px;">
+      <span class="num" style="font-size:22px;color:var(--brass);width:16px;">${i+1}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.note||t.category)}</div>
+        <div class="note" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.date)}${t.note?' · '+esc(t.category):''}</div>
+      </div>
+      <span class="num neg" style="font-size:21px;white-space:nowrap;">${fmt(t.amount)}</span>
+    </div>`).join('') || `<div class="empty">Inga utgifter ännu i år</div>`;
+
   const typeBtns = [['expense','Utgift'],['income','Inkomst']].map(([k,l])=>
     `<button class="btn ${FORM.type===k?'on':''}" data-type="${k}">${l}</button>`).join('');
 
@@ -524,11 +536,17 @@ function renderTx(D){
         <input id="f-note" class="inp" value="${esc(FORM.note)}" placeholder="valfritt"></div>
       <button id="btn-add" class="btn-primary">Lägg till post</button>
     `)}
+    <div>
+    ${card(`
+      <h2 class="h">Största utgifterna ${D.year}</h2>
+      ${topRows}
+    `,'margin-bottom:40px;')}
     ${card(`
       <h2 class="h">Poster</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">${filters}</div>
       <div style="display:flex;flex-direction:column;max-height:560px;overflow-y:auto;">${txRows}</div>
     `)}
+    </div>
   </div>`;
 }
 
