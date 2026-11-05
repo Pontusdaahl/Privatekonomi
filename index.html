@@ -72,6 +72,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:po
 /* Liggare – siffror i rutnät med tunna linjer */
 .ledger{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:40px;}
 .ledger.two{grid-template-columns:1fr 1fr;}
+.ledger.three{grid-template-columns:repeat(3,1fr);}
 .ledger>div{padding:16px 18px;border-right:1px solid var(--line);}
 .ledger>div:last-child{border-right:none;}
 .ledger .num{font-size:32px;margin-top:2px;}
@@ -123,11 +124,13 @@ input[type=range].fire-sl::-moz-range-progress{height:3px;border-radius:2px;back
   #pin-screen{background:linear-gradient(180deg,rgba(14,21,17,.5),rgba(14,21,17,.92)),var(--photo-m) center/cover no-repeat;}
   .tabs{display:none;}
   #main-wrap{padding:16px 18px 96px;}
-  .ledger,.ledger.two{grid-template-columns:1fr 1fr;}
+  .ledger,.ledger.two,.ledger.three{grid-template-columns:1fr 1fr;}
   .ledger>div{padding:14px 12px 14px 2px;border-right:none;}
   .ledger>div:nth-child(odd){border-right:1px solid var(--line);}
   .ledger>div:nth-child(even){padding-left:14px;}
   .ledger>div:nth-child(-n+2):not(:nth-last-child(-n+2)){border-bottom:1px solid var(--line);}
+  .ledger.three>div:first-child{border-bottom:none;}
+  .ledger.three>div:last-child{grid-column:1/-1;border-right:none;padding-left:2px;border-top:1px solid var(--line);}
   .ledger .num{font-size:28px;}
   .ledger.fire .num{font-size:24px;}
   .month{gap:12px;justify-content:space-between;}
@@ -304,7 +307,7 @@ async function loadFire(){
   }catch(e){console.warn('loadFire failed',e);}
 }
 
-const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt'],investment:['Övrigt','Aktier','Fonder','Amortering']};
+const DEFAULT_CATS={expense:['Bostad','Mat','Transport','Nöje','Kläder','Övrigt'],income:['Lön','Övrigt']};
 const ASSET_CATS=['Aktier/fonder','Sparande','Fastigheter','Fordon','Extra'];
 const FIRE_CATS=['Aktier/fonder','Sparande']; // endast likvida tillgångar räknas mot FIRE
 const FIREBASE_URL='https://privatekonomi-6ca77-default-rtdb.europe-west1.firebasedatabase.app';
@@ -369,7 +372,7 @@ function derive(month){
   const firstDate=allDates.length?allDates[0]:null;
   return{income,expense,invested,saved,savingsRate,totAssets,totDebts,netWorth,fireCapital,expByCat,
     year,yIncome,yExpense,yInvested,ySaved,yRate,yExpByCat,
-    allIncome,allExpense,allInvested,allSaved,allRate,allExpByCat,firstDate,monthTxCount:monthTx.length};
+    allIncome,allExpense,allInvested,allSaved,allRate,allExpByCat,firstDate,monthTxCount:monthTx.filter(t=>t.type!=='investment').length};
 }
 
 function render(){
@@ -448,9 +451,9 @@ function renderOversikt(D){
     </div>`;
   }).join('') || `<div class="empty">Inga utgifter denna månad</div>`;
 
-  const summary=(title,sub,inc,exp,inv,saved,rate,cats)=>card(`
+  const summary=(title,sub,inc,exp,saved,rate,cats)=>card(`
       <h2 class="h">${title}${sub?`<br><small>${sub}</small>`:''}</h2>
-      ${row('Inkomster',fmt(inc),'pos')}${row('Utgifter',fmt(exp),'neg')}${row('Investerat',fmt(inv))}
+      ${row('Inkomster',fmt(inc),'pos')}${row('Utgifter',fmt(exp),'neg')}
       <div class="line-row" style="border-bottom:none;"><span style="color:var(--ink);font-weight:600;">Sparat</span><span class="num" style="font-size:22px;">${fmt(saved)} <span class="note" style="font-family:var(--text);">· ${Math.round(rate)} %</span></span></div>
       <div class="sublab">Utgifter per kategori</div>
       ${cats}`);
@@ -462,10 +465,9 @@ function renderOversikt(D){
     <button class="circ" data-month="1" aria-label="Nästa månad">›</button>
   </div>
   <div class="note" style="text-align:center;margin:6px 0 22px;">${D.monthTxCount} poster denna månad</div>
-  <div class="ledger">
+  <div class="ledger three">
     <div><div class="lab">Inkomster</div><div class="num pos">${fmt(D.income)}</div></div>
     <div><div class="lab">Utgifter</div><div class="num neg">${fmt(D.expense)}</div></div>
-    <div><div class="lab">Investerat</div><div class="num">${fmt(D.invested)}</div></div>
     <div><div class="lab">Sparkvot</div><div class="num ${D.savingsRate<0?'neg':''}">${Math.round(D.savingsRate)} %</div><div class="note">${fmt(D.saved)} sparat</div></div>
   </div>
   <div class="cols">
@@ -473,13 +475,13 @@ function renderOversikt(D){
     ${card(`<h2 class="h">Utgifter per kategori</h2>${top}`)}
   </div>
   <div class="cols">
-    ${summary('Helår '+D.year,'',D.yIncome,D.yExpense,D.yInvested,D.ySaved,D.yRate,catBreakdown(D.yExpByCat))}
-    ${summary('Sedan start',D.firstDate?'från '+esc(D.firstDate):'',D.allIncome,D.allExpense,D.allInvested,D.allSaved,D.allRate,catBreakdown(D.allExpByCat))}
+    ${summary('Helår '+D.year,'',D.yIncome,D.yExpense,D.ySaved,D.yRate,catBreakdown(D.yExpByCat))}
+    ${summary('Sedan start',D.firstDate?'från '+esc(D.firstDate):'',D.allIncome,D.allExpense,D.allSaved,D.allRate,catBreakdown(D.allExpByCat))}
   </div>`;
 }
 
 function renderTx(D){
-  let rows = DATA.transactions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  let rows = DATA.transactions.filter(t=>t.type!=='investment').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if (TXFILTER!=='all') rows = rows.filter(t=>t.type===TXFILTER);
   const tcls={income:'pos',expense:'neg',investment:''};
   const tlbl={income:'Inkomst',expense:'Utgift',investment:'Investering'};
@@ -494,10 +496,10 @@ function renderTx(D){
       <button class="del" data-deltx="${t.id}" aria-label="Ta bort">×</button>
     </div>`).join('') || `<div class="empty">Inga poster ännu – lägg till din första transaktion</div>`;
 
-  const filters=[['all','Alla'],['income','Inkomster'],['expense','Utgifter'],['investment','Investeringar']].map(([k,l])=>
+  const filters=[['all','Alla'],['income','Inkomster'],['expense','Utgifter']].map(([k,l])=>
     `<button class="btn ${TXFILTER===k?'on':''}" data-txf="${k}" style="padding:6px 12px;font-size:15px;">${l}</button>`).join('');
 
-  const typeBtns = [['expense','Utgift'],['income','Inkomst'],['investment','Investering']].map(([k,l])=>
+  const typeBtns = [['expense','Utgift'],['income','Inkomst']].map(([k,l])=>
     `<button class="btn ${FORM.type===k?'on':''}" data-type="${k}">${l}</button>`).join('');
 
   const catOpts = (DEFAULT_CATS[FORM.type]||['Övrigt']).map(c=>`<option value="${esc(c)}" ${c===FORM.category?'selected':''}>${esc(c)}</option>`).join('');
@@ -732,7 +734,7 @@ function bindFireEvents(){
 
 function renderModal(){
   const exportText = esc(JSON.stringify(DATA, null, 2));
-  const schemaText = esc('{\n  "transactions": [\n    { "type": "income|expense|investment",\n      "category": "Lön", "amount": 30000,\n      "date": "2026-06-25", "note": "" }\n  ],\n  "assets": [ { "name": "Sparkonto", "value": 90000 } ],\n  "debts":  [ { "name": "Bolån", "value": 1500000 } ],\n  "budgets": { "Mat": 5000, "Boende": 12000 },\n  "fire": { "currentAge": 30, "expectedReturn": 7, "inflation": 2, "swr": 4 }\n}');
+  const schemaText = esc('{\n  "transactions": [\n    { "type": "income|expense",\n      "category": "Lön", "amount": 30000,\n      "date": "2026-06-25", "note": "" }\n  ],\n  "assets": [ { "name": "Sparkonto", "value": 90000 } ],\n  "debts":  [ { "name": "Bolån", "value": 1500000 } ],\n  "budgets": { "Mat": 5000, "Boende": 12000 },\n  "fire": { "currentAge": 30, "expectedReturn": 7, "inflation": 2, "swr": 4 }\n}');
   const mono = "font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;";
   return `
   <div id="io-backdrop" style="position:fixed;inset:0;z-index:150;background:rgba(8,12,10,.8);display:flex;align-items:center;justify-content:center;padding:18px;">
