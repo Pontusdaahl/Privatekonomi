@@ -538,13 +538,13 @@ function renderTx(D){
     `)}
     <div>
     ${card(`
-      <h2 class="h">Största utgifterna ${D.year}</h2>
-      ${topRows}
-    `,'margin-bottom:40px;')}
-    ${card(`
       <h2 class="h">Poster</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">${filters}</div>
       <div style="display:flex;flex-direction:column;max-height:560px;overflow-y:auto;">${txRows}</div>
+    `,'margin-bottom:40px;')}
+    ${card(`
+      <h2 class="h">Största utgifterna ${D.year}</h2>
+      ${topRows}
     `)}
     </div>
   </div>`;
