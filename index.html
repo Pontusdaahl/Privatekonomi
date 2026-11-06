@@ -58,7 +58,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:po
 /* Omslag med foto */
 .hero{position:relative;text-align:center;padding:18px 28px 34px;
   background:linear-gradient(180deg,rgba(18,26,21,.25) 0%,rgba(18,26,21,.6) 62%,var(--bg) 100%),var(--photo-d) center 38%/cover no-repeat;}
-.hero-top{display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto 34px;}
+.hero-top{display:flex;justify-content:flex-end;align-items:center;max-width:1100px;margin:0 auto 34px;}
 .brand{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);}
 .link-btn{background:rgba(14,21,17,.45);border:1px solid var(--line);border-radius:3px;color:var(--brass2);padding:6px 12px;font-size:15px;cursor:pointer;}
 .hero .lab{color:var(--brass2);}
@@ -233,7 +233,7 @@ function emptyData(){
   return {transactions:[],assets:[],debts:[],budgets:{},
     fire:{currentAge:'27',expectedReturn:'7',inflation:'2',swr:'4',monthlySaving:null,currentCapital:null,targetAnnualSpend:null}};
 }
-let DATA=null, TAB='oversikt', TXFILTER='all', TXQ={q:'',cat:'all',period:'month'}, OV={range:'12',cat:'all',inc:true,exp:true,sav:false}, OV_CHART=null, IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
+let DATA=null, TAB='oversikt', TXFILTER='all', TXQ={q:'',cat:'all',period:'month'}, OV={range:'year',cat:'all',inc:true,exp:true,sav:false}, OV_CHART=null, IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
 let MONTH=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
 let FORM={type:'expense',amount:'',category:'Bostad',date:MONTH+'-01',note:''};
 let ASSETFORM={name:'',value:'',category:'Aktier/fonder'};
@@ -382,7 +382,6 @@ function render(){
   document.getElementById('root').innerHTML=`
   <div class="hero">
     <div class="hero-top">
-      <div class="brand">Privatekonomi</div>
       <button id="btn-openio" class="link-btn">Data</button>
     </div>
     <div class="lab">Nettoförmögenhet</div>
@@ -531,17 +530,17 @@ function drawOvChart(){
   const font={family:"'EB Garamond', Georgia, serif",size:14};
   const kr=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(v)+' kr';
   const ds=[];
-  if(OV.inc)ds.push({type:'bar',label:'Inkomster',data:S.inc,backgroundColor:shade('179,207,159'),borderRadius:2,maxBarThickness:26,order:2});
-  if(OV.exp)ds.push({type:'bar',label:OV.cat==='all'?'Utgifter':OV.cat,data:S.exp,backgroundColor:shade('221,146,119'),borderRadius:2,maxBarThickness:26,order:2});
-  if(OV.sav)ds.push({type:'line',label:'Sparat',data:S.sav,borderColor:'#c2a566',backgroundColor:'#c2a566',borderWidth:2,pointRadius:3,tension:.25,order:1});
+  if(OV.inc)ds.push({type:'bar',solid:'#6fc24a',label:'Inkomster',data:S.inc,backgroundColor:shade('179,207,159'),borderRadius:2,maxBarThickness:26,order:2});
+  if(OV.exp)ds.push({type:'bar',solid:'#f0603a',label:OV.cat==='all'?'Utgifter':OV.cat,data:S.exp,backgroundColor:shade('221,146,119'),borderRadius:2,maxBarThickness:26,order:2});
+  if(OV.sav)ds.push({type:'line',solid:'#c2a566',label:'Sparat',data:S.sav,borderColor:'#c2a566',backgroundColor:'#c2a566',borderWidth:2,pointRadius:3,tension:.25,order:1});
   if(OV_CHART){OV_CHART.destroy();OV_CHART=null;}
   OV_CHART=new Chart(c,{data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,
     interaction:{mode:'index',intersect:false},
     onClick:(e,els)=>{const i=els.length?els[0].index:null;if(i==null||!S.months[i])return;MONTH=S.months[i];setTimeout(render,0);},
     onHover:(e,els)=>{if(e.native&&e.native.target)e.native.target.style.cursor=els.length?'pointer':'default';},
     plugins:{legend:{display:false},
-      tooltip:{backgroundColor:'#0e1511',borderColor:'rgba(194,165,102,.4)',borderWidth:1,titleColor:'#d6bb7a',bodyColor:'#efe7d4',titleFont:font,bodyFont:font,padding:10,
-        callbacks:{title:items=>{const t=monthLabel(S.months[items[0].dataIndex]);return t.charAt(0).toUpperCase()+t.slice(1);},label:ctx=>' '+ctx.dataset.label+': '+kr(ctx.raw)}}},
+      tooltip:{backgroundColor:'#0e1511',borderColor:'rgba(194,165,102,.4)',borderWidth:1,titleColor:'#d6bb7a',bodyColor:'#efe7d4',titleFont:font,bodyFont:font,padding:10,boxWidth:14,boxHeight:14,boxPadding:6,multiKeyBackground:'transparent',
+        callbacks:{labelColor:ctx=>({borderColor:ctx.dataset.solid,backgroundColor:ctx.dataset.solid,borderWidth:0,borderRadius:2}),title:items=>{const t=monthLabel(S.months[items[0].dataIndex]);return t.charAt(0).toUpperCase()+t.slice(1);},label:ctx=>' '+ctx.dataset.label+': '+kr(ctx.raw)}}},
     scales:{
       x:{grid:{display:false},border:{color:'rgba(194,165,102,.34)'},ticks:{color:'#9a9483',font,autoSkip:true,maxRotation:0}},
       y:{beginAtZero:true,grid:{color:'rgba(194,165,102,.1)'},border:{display:false},ticks:{color:'#9a9483',font,maxTicksLimit:6,callback:v=>Math.abs(v)>=1000?Math.round(v/1000)+' tkr':v}}
