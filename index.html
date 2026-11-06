@@ -27,6 +27,7 @@ input::placeholder,textarea::placeholder{color:var(--faint);font-style:italic;}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brass) !important;}
 select option{background:var(--bg2);color:var(--ink);}
 input[type="date"]{color-scheme:dark;}
+input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none;display:none;}
 input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;opacity:0;position:absolute;right:0;width:36px;height:100%;}
 @keyframes pinShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 
@@ -187,6 +188,7 @@ input[type=range].fire-sl::-moz-range-progress{height:3px;border-radius:2px;back
     FIRE
   </button>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const PIN_HASH = '3a7bd3e2360a3d29eea436fcfb7e44c735d117c681f5656f8ac';
 // Simple hash check - not cryptographic but sufficient for casual protection
@@ -231,7 +233,7 @@ function emptyData(){
   return {transactions:[],assets:[],debts:[],budgets:{},
     fire:{currentAge:'27',expectedReturn:'7',inflation:'2',swr:'4',monthlySaving:null,currentCapital:null,targetAnnualSpend:null}};
 }
-let DATA=null, TAB='oversikt', TXFILTER='all', IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
+let DATA=null, TAB='oversikt', TXFILTER='all', TXQ={q:'',cat:'all',period:'all'}, OV={range:'12',cat:'all',inc:true,exp:true,sav:false}, OV_CHART=null, IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
 let MONTH=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
 let FORM={type:'expense',amount:'',category:'Bostad',date:MONTH+'-01',note:''};
 let ASSETFORM={name:'',value:'',category:'Aktier/fonder'};
@@ -403,6 +405,7 @@ function render(){
     renderFormogenhet(D);
   bindEvents();
   if(TAB==='mal') bindFireEvents();
+  if(TAB==='oversikt') drawOvChart();
   updateBottomNav();
 }
 
@@ -470,23 +473,106 @@ function renderOversikt(D){
     <div><div class="lab">Utgifter</div><div class="num neg">${fmt(D.expense)}</div></div>
     <div><div class="lab">Sparkvot</div><div class="num ${D.savingsRate<0?'neg':''}">${Math.round(D.savingsRate)} %</div><div class="note">${fmt(D.saved)} sparat</div></div>
   </div>
+  ${renderOvChartSection()}
   <div class="cols">
     ${card(`<h2 class="h">Månadsbudget</h2>${budgetRows}`)}
     ${card(`<h2 class="h">Utgifter per kategori</h2>${top}`)}
   </div>
   <div class="cols">
-    ${summary('Helår '+D.year,'',D.yIncome,D.yExpense,D.ySaved,D.yRate,catBreakdown(D.yExpByCat))}
-    ${summary('Sedan start',D.firstDate?'från '+esc(D.firstDate):'',D.allIncome,D.allExpense,D.allSaved,D.allRate,catBreakdown(D.allExpByCat))}
+    ${summary('Helår '+D.year,'januari – december',D.yIncome,D.yExpense,D.ySaved,D.yRate,catBreakdown(D.yExpByCat))}
+    ${summary('Sedan start',D.firstDate?'från '+esc(D.firstDate):'inga poster ännu',D.allIncome,D.allExpense,D.allSaved,D.allRate,catBreakdown(D.allExpByCat))}
   </div>`;
 }
 
-function renderTx(D){
-  let rows = DATA.transactions.filter(t=>t.type!=='investment').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if (TXFILTER!=='all') rows = rows.filter(t=>t.type===TXFILTER);
-  const tcls={income:'pos',expense:'neg',investment:''};
-  const tlbl={income:'Inkomst',expense:'Utgift',investment:'Investering'};
-  const tsign={income:'+ ',expense:'− ',investment:''};
-  const txRows = rows.map(t=>`
+function ym(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function ovMonths(){
+  const now=new Date(), cur=ym(now);
+  let start;
+  if(OV.range==='year') start=now.getFullYear()+'-01';
+  else if(OV.range==='all'){ const ds=DATA.transactions.map(t=>t.date).filter(Boolean).sort(); start=ds.length?ds[0].slice(0,7):cur; if(start>cur) start=cur; }
+  else start=ym(new Date(now.getFullYear(),now.getMonth()-Number(OV.range)+1,1));
+  const out=[];let [y,m]=start.split('-').map(Number);
+  while(true){const k=y+'-'+String(m).padStart(2,'0');out.push(k);if(k>=cur||out.length>240)break;m++;if(m>12){m=1;y++;}}
+  return out;
+}
+function ovSeries(){
+  const months=ovMonths(), inc={}, exp={};
+  months.forEach(k=>{inc[k]=0;exp[k]=0;});
+  DATA.transactions.forEach(t=>{const k=(t.date||'').slice(0,7);if(!(k in inc))return;
+    if(t.type==='income')inc[k]+=toNum(t.amount,0);
+    else if(t.type==='expense'&&(OV.cat==='all'||t.category===OV.cat))exp[k]+=toNum(t.amount,0);});
+  return {months,inc:months.map(k=>inc[k]),exp:months.map(k=>exp[k]),sav:months.map(k=>(inc[k]||exp[k])?inc[k]-exp[k]:null)};
+}
+function renderOvChartSection(){
+  const S=ovSeries(), n=S.months.length||1, avg=a=>a.reduce((x,y)=>x+(y||0),0)/n;
+  const cats=Array.from(new Set(DATA.transactions.filter(t=>t.type==='expense').map(t=>t.category).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'sv'));
+  const ranges=[['6','6 mån'],['12','12 mån'],['year','I år'],['all','Allt']].map(([k,l])=>`<button class="btn ${OV.range===k?'on':''}" data-ovr="${k}" style="padding:6px 12px;font-size:15px;">${l}</button>`).join('');
+  const tog=(k,l,col,line)=>`<button class="btn ${OV[k]?'on':''}" data-ovs="${k}" style="padding:6px 12px;font-size:15px;display:flex;align-items:center;gap:7px;"><span style="display:inline-block;width:12px;${line?`height:0;border-top:2px solid ${col}`:`height:10px;background:${col}`};opacity:${OV[k]?1:.35};"></span>${l}</button>`;
+  const expLabel=OV.cat==='all'?'Utgifter':esc(OV.cat);
+  return `
+  <section style="margin-bottom:40px;">
+    <h2 class="h">Inkomster och utgifter per månad</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;">${ranges}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-bottom:16px;">
+      ${tog('inc','Inkomster','#b3cf9f')}${tog('exp',expLabel,'#dd9277')}${tog('sav','Sparat','#c2a566',true)}
+      <select id="ov-cat" class="inp" style="width:auto;padding:6px 10px;font-size:15px;" aria-label="Visa utgifter för kategori">
+        <option value="all">Alla kategorier</option>${cats.map(c=>`<option value="${esc(c)}" ${OV.cat===c?'selected':''}>${esc(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="position:relative;width:100%;height:280px;"><canvas id="ov-chart"></canvas></div>
+    <div class="note" style="text-align:center;margin-top:10px;">
+      Snitt per månad: inkomster ${fmt(avg(S.inc))} · ${expLabel.toLowerCase()} ${fmt(avg(S.exp))}${OV.cat==='all'?` · sparat ${fmt(avg(S.sav))}`:''}
+      <br>Tryck på en månad för att visa den ovan.
+    </div>
+  </section>`;
+}
+function drawOvChart(){
+  const c=document.getElementById('ov-chart');if(!c||typeof Chart==='undefined')return;
+  const S=ovSeries();
+  const labels=S.months.map(k=>{const [y,m]=k.split('-').map(Number);const s=new Date(y,m-1,1).toLocaleDateString('sv-SE',{month:'short'}).replace('.','');return (m===1||k===S.months[0])?[s,String(y)]:s;});
+  const sel=S.months.indexOf(MONTH);
+  const shade=rgb=>S.months.map((k,i)=>`rgba(${rgb},${sel<0||i===sel?.95:.42})`);
+  const font={family:"'EB Garamond', Georgia, serif",size:14};
+  const kr=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(v)+' kr';
+  const ds=[];
+  if(OV.inc)ds.push({type:'bar',label:'Inkomster',data:S.inc,backgroundColor:shade('179,207,159'),borderRadius:2,maxBarThickness:26,order:2});
+  if(OV.exp)ds.push({type:'bar',label:OV.cat==='all'?'Utgifter':OV.cat,data:S.exp,backgroundColor:shade('221,146,119'),borderRadius:2,maxBarThickness:26,order:2});
+  if(OV.sav)ds.push({type:'line',label:'Sparat',data:S.sav,borderColor:'#c2a566',backgroundColor:'#c2a566',borderWidth:2,pointRadius:3,tension:.25,order:1});
+  if(OV_CHART){OV_CHART.destroy();OV_CHART=null;}
+  OV_CHART=new Chart(c,{data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    onClick:(e,els)=>{const i=els.length?els[0].index:null;if(i==null||!S.months[i])return;MONTH=S.months[i];setTimeout(render,0);},
+    onHover:(e,els)=>{if(e.native&&e.native.target)e.native.target.style.cursor=els.length?'pointer':'default';},
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'#0e1511',borderColor:'rgba(194,165,102,.4)',borderWidth:1,titleColor:'#d6bb7a',bodyColor:'#efe7d4',titleFont:font,bodyFont:font,padding:10,
+        callbacks:{title:items=>{const t=monthLabel(S.months[items[0].dataIndex]);return t.charAt(0).toUpperCase()+t.slice(1);},label:ctx=>' '+ctx.dataset.label+': '+kr(ctx.raw)}}},
+    scales:{
+      x:{grid:{display:false},border:{color:'rgba(194,165,102,.34)'},ticks:{color:'#9a9483',font,autoSkip:true,maxRotation:0}},
+      y:{beginAtZero:true,grid:{color:'rgba(194,165,102,.1)'},border:{display:false},ticks:{color:'#9a9483',font,maxTicksLimit:6,callback:v=>Math.abs(v)>=1000?Math.round(v/1000)+' tkr':v}}
+    }}});
+}
+
+function txPeriodOk(d,p){
+  if(p==='all')return true; if(!d)return false;
+  const now=new Date(), m=d.slice(0,7), y=now.getFullYear();
+  if(p==='month')return m===ym(now);
+  if(p==='prev')return m===ym(new Date(y,now.getMonth()-1,1));
+  if(p==='3m')return m>=ym(new Date(y,now.getMonth()-2,1));
+  if(p==='year')return d.slice(0,4)===String(y);
+  if(p==='lastyear')return d.slice(0,4)===String(y-1);
+  return true;
+}
+function txFilterActive(){return TXFILTER!=='all'||TXQ.cat!=='all'||TXQ.period!=='all'||TXQ.q.trim()!=='';}
+function txListHTML(){
+  const q=TXQ.q.trim().toLowerCase();
+  const rows=DATA.transactions.filter(t=>t.type!=='investment'
+      &&(TXFILTER==='all'||t.type===TXFILTER)
+      &&(TXQ.cat==='all'||t.category===TXQ.cat)
+      &&txPeriodOk(t.date||'',TXQ.period)
+      &&(!q||[t.category,t.note,t.date,String(t.amount),fmt(t.amount)].join(' ').toLowerCase().replace(/\s/g,' ').includes(q)))
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const tcls={income:'pos',expense:'neg'}, tlbl={income:'Inkomst',expense:'Utgift'}, tsign={income:'+ ',expense:'− '};
+  const list=rows.map(t=>`
     <div class="item-row" style="padding:10px 0;gap:12px;">
       <div style="flex:1;min-width:0;">
         <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.category)}</div>
@@ -494,7 +580,26 @@ function renderTx(D){
       </div>
       <span class="num ${tcls[t.type]||''}" style="font-size:21px;white-space:nowrap;">${tsign[t.type]||''}${fmt(t.amount)}</span>
       <button class="del" data-deltx="${t.id}" aria-label="Ta bort">×</button>
-    </div>`).join('') || `<div class="empty">Inga poster ännu – lägg till din första transaktion</div>`;
+    </div>`).join('') || `<div class="empty">${txFilterActive()?'Inga poster matchar filtret':'Inga poster ännu – lägg till din första transaktion'}</div>`;
+  const inc=rows.filter(t=>t.type==='income').reduce((a,t)=>a+toNum(t.amount,0),0);
+  const exp=rows.filter(t=>t.type==='expense').reduce((a,t)=>a+toNum(t.amount,0),0);
+  const sum=`${rows.length} ${rows.length===1?'post':'poster'}${inc?` · <span class="pos">in ${fmt(inc)}</span>`:''}${exp?` · <span class="neg">ut ${fmt(exp)}</span>`:''}`;
+  return {list,sum};
+}
+function updateTxList(){
+  const r=txListHTML();
+  const l=document.getElementById('tx-list'), s=document.getElementById('tx-sum'), c=document.getElementById('tx-clear');
+  if(l)l.innerHTML=r.list; if(s)s.innerHTML=r.sum; if(c)c.style.visibility=txFilterActive()?'visible':'hidden';
+  bindTxDelete();
+}
+function bindTxDelete(){
+  document.querySelectorAll('[data-deltx]').forEach(b=>b.onclick=async()=>{ DATA.transactions=DATA.transactions.filter(t=>t.id!==b.dataset.deltx); await saveData(); render(); });
+}
+
+function renderTx(D){
+  const TL=txListHTML();
+  const txCats=Array.from(new Set(DATA.transactions.filter(t=>t.type!=='investment').map(t=>t.category).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'sv'));
+  const periods=[['all','Hela perioden'],['month','Denna månad'],['prev','Förra månaden'],['3m','Senaste 3 månaderna'],['year','I år'],['lastyear','Förra året']];
 
   const filters=[['all','Alla'],['income','Inkomster'],['expense','Utgifter']].map(([k,l])=>
     `<button class="btn ${TXFILTER===k?'on':''}" data-txf="${k}" style="padding:6px 12px;font-size:15px;">${l}</button>`).join('');
@@ -539,8 +644,17 @@ function renderTx(D){
     <div>
     ${card(`
       <h2 class="h">Poster</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">${filters}</div>
-      <div style="display:flex;flex-direction:column;max-height:560px;overflow-y:auto;">${txRows}</div>
+      <input id="tx-q" class="inp" type="search" value="${esc(TXQ.q)}" placeholder="Sök på anteckning, kategori eller belopp" style="margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <select id="tx-cat" class="inp" style="flex:1;min-width:0;"><option value="all">Alla kategorier</option>${txCats.map(c=>`<option value="${esc(c)}" ${TXQ.cat===c?'selected':''}>${esc(c)}</option>`).join('')}</select>
+        <select id="tx-period" class="inp" style="flex:1;min-width:0;">${periods.map(([k,l])=>`<option value="${k}" ${TXQ.period===k?'selected':''}>${l}</option>`).join('')}</select>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">${filters}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px;">
+        <span id="tx-sum" class="note">${TL.sum}</span>
+        <button id="tx-clear" class="del" style="font-size:14px;color:var(--brass);visibility:${txFilterActive()?'visible':'hidden'};">Rensa filter</button>
+      </div>
+      <div id="tx-list" style="display:flex;flex-direction:column;max-height:560px;overflow-y:auto;">${TL.list}</div>
     `,'margin-bottom:40px;')}
     ${card(`
       <h2 class="h">Största utgifterna ${D.year}</h2>
@@ -800,7 +914,14 @@ function bindEvents(){
   });
   document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{ FORM.type=b.dataset.type; FORM.category=(DEFAULT_CATS[FORM.type]||['Övrigt'])[0]; render(); });
   document.querySelectorAll('[data-txf]').forEach(b=>b.onclick=()=>{ TXFILTER=b.dataset.txf; render(); });
-  document.querySelectorAll('[data-deltx]').forEach(b=>b.onclick=async()=>{ DATA.transactions=DATA.transactions.filter(t=>t.id!==b.dataset.deltx); await saveData(); render(); });
+  bindTxDelete();
+  const tq=document.getElementById('tx-q'); if(tq) tq.oninput=e=>{ TXQ.q=e.target.value; updateTxList(); };
+  const tcat=document.getElementById('tx-cat'); if(tcat) tcat.onchange=e=>{ TXQ.cat=e.target.value; updateTxList(); };
+  const tper=document.getElementById('tx-period'); if(tper) tper.onchange=e=>{ TXQ.period=e.target.value; updateTxList(); };
+  const tclr=document.getElementById('tx-clear'); if(tclr) tclr.onclick=()=>{ TXQ={q:'',cat:'all',period:'all'}; TXFILTER='all'; render(); };
+  document.querySelectorAll('[data-ovr]').forEach(b=>b.onclick=()=>{ OV.range=b.dataset.ovr; render(); });
+  document.querySelectorAll('[data-ovs]').forEach(b=>b.onclick=()=>{ OV[b.dataset.ovs]=!OV[b.dataset.ovs]; render(); });
+  const ovc=document.getElementById('ov-cat'); if(ovc) ovc.onchange=e=>{ OV.cat=e.target.value; render(); };
   document.querySelectorAll('[data-delasset]').forEach(b=>b.onclick=async()=>{ DATA.assets=DATA.assets.filter(t=>t.id!==b.dataset.delasset); await saveData(); render(); });
   document.querySelectorAll('[data-deldebt]').forEach(b=>b.onclick=async()=>{ DATA.debts=DATA.debts.filter(t=>t.id!==b.dataset.deldebt); await saveData(); render(); });
   document.querySelectorAll('[data-budget]').forEach(inp=>inp.onchange=async(e)=>{
@@ -896,6 +1017,5 @@ function bindEvents(){
   render();
 })();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
