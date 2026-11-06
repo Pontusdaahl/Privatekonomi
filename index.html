@@ -530,8 +530,8 @@ function drawOvChart(){
   const font={family:"'EB Garamond', Georgia, serif",size:14};
   const kr=v=>new Intl.NumberFormat('sv-SE',{maximumFractionDigits:0}).format(v)+' kr';
   const ds=[];
-  if(OV.inc)ds.push({type:'bar',solid:'#6fc24a',label:'Inkomster',data:S.inc,backgroundColor:shade('179,207,159'),borderRadius:2,maxBarThickness:26,order:2});
-  if(OV.exp)ds.push({type:'bar',solid:'#f0603a',label:OV.cat==='all'?'Utgifter':OV.cat,data:S.exp,backgroundColor:shade('221,146,119'),borderRadius:2,maxBarThickness:26,order:2});
+  if(OV.inc)ds.push({type:'bar',solid:'#93c47d',label:'Inkomster',data:S.inc,backgroundColor:shade('179,207,159'),borderRadius:2,maxBarThickness:26,order:2});
+  if(OV.exp)ds.push({type:'bar',solid:'#e3805f',label:OV.cat==='all'?'Utgifter':OV.cat,data:S.exp,backgroundColor:shade('221,146,119'),borderRadius:2,maxBarThickness:26,order:2});
   if(OV.sav)ds.push({type:'line',solid:'#c2a566',label:'Sparat',data:S.sav,borderColor:'#c2a566',backgroundColor:'#c2a566',borderWidth:2,pointRadius:3,tension:.25,order:1});
   if(OV_CHART){OV_CHART.destroy();OV_CHART=null;}
   OV_CHART=new Chart(c,{data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,
