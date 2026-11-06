@@ -233,7 +233,7 @@ function emptyData(){
   return {transactions:[],assets:[],debts:[],budgets:{},
     fire:{currentAge:'27',expectedReturn:'7',inflation:'2',swr:'4',monthlySaving:null,currentCapital:null,targetAnnualSpend:null}};
 }
-let DATA=null, TAB='oversikt', TXFILTER='all', TXQ={q:'',cat:'all',period:'all'}, OV={range:'12',cat:'all',inc:true,exp:true,sav:false}, OV_CHART=null, IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
+let DATA=null, TAB='oversikt', TXFILTER='all', TXQ={q:'',cat:'all',period:'month'}, OV={range:'12',cat:'all',inc:true,exp:true,sav:false}, OV_CHART=null, IO_OPEN=false, IO_MODE='export', IMPORT_TEXT='', MSG=null, SAVE_TIMER=null, FIRE_CHART=null;
 let MONTH=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
 let FORM={type:'expense',amount:'',category:'Bostad',date:MONTH+'-01',note:''};
 let ASSETFORM={name:'',value:'',category:'Aktier/fonder'};
@@ -505,7 +505,6 @@ function ovSeries(){
 }
 function renderOvChartSection(){
   const S=ovSeries(), n=S.months.length||1, avg=a=>a.reduce((x,y)=>x+(y||0),0)/n;
-  const cats=Array.from(new Set(DATA.transactions.filter(t=>t.type==='expense').map(t=>t.category).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'sv'));
   const ranges=[['6','6 mån'],['12','12 mån'],['year','I år'],['all','Allt']].map(([k,l])=>`<button class="btn ${OV.range===k?'on':''}" data-ovr="${k}" style="padding:6px 12px;font-size:15px;">${l}</button>`).join('');
   const tog=(k,l,col,line)=>`<button class="btn ${OV[k]?'on':''}" data-ovs="${k}" style="padding:6px 12px;font-size:15px;display:flex;align-items:center;gap:7px;"><span style="display:inline-block;width:12px;${line?`height:0;border-top:2px solid ${col}`:`height:10px;background:${col}`};opacity:${OV[k]?1:.35};"></span>${l}</button>`;
   const expLabel=OV.cat==='all'?'Utgifter':esc(OV.cat);
@@ -515,9 +514,6 @@ function renderOvChartSection(){
     <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;">${ranges}</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-bottom:16px;">
       ${tog('inc','Inkomster','#b3cf9f')}${tog('exp',expLabel,'#dd9277')}${tog('sav','Sparat','#c2a566',true)}
-      <select id="ov-cat" class="inp" style="width:auto;padding:6px 10px;font-size:15px;" aria-label="Visa utgifter för kategori">
-        <option value="all">Alla kategorier</option>${cats.map(c=>`<option value="${esc(c)}" ${OV.cat===c?'selected':''}>${esc(c)}</option>`).join('')}
-      </select>
     </div>
     <div style="position:relative;width:100%;height:280px;"><canvas id="ov-chart"></canvas></div>
     <div class="note" style="text-align:center;margin-top:10px;">
@@ -562,7 +558,7 @@ function txPeriodOk(d,p){
   if(p==='lastyear')return d.slice(0,4)===String(y-1);
   return true;
 }
-function txFilterActive(){return TXFILTER!=='all'||TXQ.cat!=='all'||TXQ.period!=='all'||TXQ.q.trim()!=='';}
+function txFilterActive(){return TXFILTER!=='all'||TXQ.cat!=='all'||TXQ.period!=='month'||TXQ.q.trim()!=='';}
 function txListHTML(){
   const q=TXQ.q.trim().toLowerCase();
   const rows=DATA.transactions.filter(t=>t.type!=='investment'
@@ -599,7 +595,7 @@ function bindTxDelete(){
 function renderTx(D){
   const TL=txListHTML();
   const txCats=Array.from(new Set(DATA.transactions.filter(t=>t.type!=='investment').map(t=>t.category).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'sv'));
-  const periods=[['all','Hela perioden'],['month','Denna månad'],['prev','Förra månaden'],['3m','Senaste 3 månaderna'],['year','I år'],['lastyear','Förra året']];
+  const periods=[['month','Denna månad'],['prev','Förra månaden'],['year','I år'],['all','Allt']];
 
   const filters=[['all','Alla'],['income','Inkomster'],['expense','Utgifter']].map(([k,l])=>
     `<button class="btn ${TXFILTER===k?'on':''}" data-txf="${k}" style="padding:6px 12px;font-size:15px;">${l}</button>`).join('');
@@ -918,10 +914,10 @@ function bindEvents(){
   const tq=document.getElementById('tx-q'); if(tq) tq.oninput=e=>{ TXQ.q=e.target.value; updateTxList(); };
   const tcat=document.getElementById('tx-cat'); if(tcat) tcat.onchange=e=>{ TXQ.cat=e.target.value; updateTxList(); };
   const tper=document.getElementById('tx-period'); if(tper) tper.onchange=e=>{ TXQ.period=e.target.value; updateTxList(); };
-  const tclr=document.getElementById('tx-clear'); if(tclr) tclr.onclick=()=>{ TXQ={q:'',cat:'all',period:'all'}; TXFILTER='all'; render(); };
+  const tclr=document.getElementById('tx-clear'); if(tclr) tclr.onclick=()=>{ TXQ={q:'',cat:'all',period:'month'}; TXFILTER='all'; render(); };
   document.querySelectorAll('[data-ovr]').forEach(b=>b.onclick=()=>{ OV.range=b.dataset.ovr; render(); });
   document.querySelectorAll('[data-ovs]').forEach(b=>b.onclick=()=>{ OV[b.dataset.ovs]=!OV[b.dataset.ovs]; render(); });
-  const ovc=document.getElementById('ov-cat'); if(ovc) ovc.onchange=e=>{ OV.cat=e.target.value; render(); };
+
   document.querySelectorAll('[data-delasset]').forEach(b=>b.onclick=async()=>{ DATA.assets=DATA.assets.filter(t=>t.id!==b.dataset.delasset); await saveData(); render(); });
   document.querySelectorAll('[data-deldebt]').forEach(b=>b.onclick=async()=>{ DATA.debts=DATA.debts.filter(t=>t.id!==b.dataset.deldebt); await saveData(); render(); });
   document.querySelectorAll('[data-budget]').forEach(inp=>inp.onchange=async(e)=>{
